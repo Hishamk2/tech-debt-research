@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+# plt.use('Agg')  # Use the 'Agg' backend for non-interactive environments
 import os
 
 def get_removal_times(df):
@@ -38,7 +39,10 @@ def plot_cdf(removal_times):
     plt.xlabel('Removal Time (days)')
     plt.ylabel('CDF')
     plt.grid(True)
-    plt.show()
+    # plt.show()
+
+    plt.savefig('satd_removal_cdf.pdf')
+    print("CDF plot saved as 'satd_removal_cdf.pdf'.")
 
 def process_files_in_folder(folder_path):
     all_removal_times = []
@@ -46,7 +50,8 @@ def process_files_in_folder(folder_path):
     for filename in os.listdir(folder_path):
         if filename.endswith(".csv"):
             file_path = os.path.join(folder_path, filename)
-            df = pd.read_csv(file_path, delimiter='\t')
+            # df = pd.read_csv(file_path, delimiter='\t')
+            df = pd.read_csv(file_path)
             removal_times, _ = get_removal_times(df)
             all_removal_times.extend(removal_times)
     
@@ -54,7 +59,8 @@ def process_files_in_folder(folder_path):
 
 def main():
     # folder_path = r"D:\\OneDrive - University of Manitoba\\Documents\\HISHAM\\Research\\Tech-Debt\\csv_folder"
-    folder_path = '/home/student/kidwaih1/Documents/Tech-Debt/software-evolution/tech-debt-results'
+    # folder_path = '/home/student/kidwaih1/Documents/Tech-Debt/software-evolution/tech-debt-results'
+    folder_path = '/home/hisham-kidwai/Documents/HISHAM/Research/Tech-Debt/tech-debt-research/csv-results/part'
     all_removal_times = process_files_in_folder(folder_path)
 
     print("Total removal times from all files:", all_removal_times)
