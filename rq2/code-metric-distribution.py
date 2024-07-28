@@ -38,6 +38,11 @@
 #       plot cdf of category
 #
 
+
+# TODO MAKE SURE TO DISCARD METHODS THAT ARE LESS THAN 2 YEARS AND TRIM TO 2 YRS
+
+print('TODO MAKE SURE TO DISCARD METHODS THAT ARE LESS THAN 2 YEARS AND TRIM TO 2 YRS')
+
 import os
 import matplotlib.pyplot as plt
 import numpy as np
