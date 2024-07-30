@@ -79,7 +79,7 @@ def main(input_folder):
         x3, y3 = compute_cdf(combined_categories[metric]['category_3'])
         
         title = f'CDF of {metric}'
-        output_file = f'cdf_{metric}.pdf'
+        output_file = f'figs/rq2/cdf_{metric}.pdf'
         
         plot_cdf(x1, y1, x2, y2, x3, y3, title, output_file)
 
