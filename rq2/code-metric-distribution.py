@@ -1,117 +1,70 @@
-# three different categories I am using for my research questions are the following:
-# 1. Methods that never had SATD (so always 0)
-# 2. Methods that had SATD (1) and ended with SATD (1)
-# 3. Methods that had SATD (1) and ended without SATD (0)
-
-# Write a python script that takes in a folder of csv files and makes a cdf 
-# (save it to somewhere instead of showing since I am working on ubuntu) 
-# of various code metric distributions between the three above categories. 
-# 
-# Use the following columns for each cdf, SLOCStandard
-# Readability
-# SimpleReadability
-# MaintainabilityIndex
-# McCabe
-# totalFanOut
-# uniqueFanOut
-
-# Use one for loop (like don't iterate through the whole csv file to get the categories THEN again iterate through the categores (O(2n)))
-# 
-# row_category(row) -> category:
-#   # 0 means never had SATD, 1 means had SATD and ended with SATD, 2 means had SATD and ended without SATD
-#   # Assuming row is a string (if not, convert to string)
-#   if splitted row has all 0's, return 0   
-#   if splitted row has 1's and the last element is 1, return 1
-#   if splitted row has 1's and the last element is 0, return 2
-# 
-# for row in csv file:
-#   for metric in metrics:
-#       if row is category1:
-#           metric1.append(row[metric].split()[0])
-#       if row is category2:
-#           metric2.append(row[metric].split()[0])      
-#       if row is category3:
-#           metric3.append(row[metric].split()[0])
-# 
-# for metric in metrics:
-#   for each category in [metric1, metric2, metric3]:
-#       plot cdf of category
-#
-
-
-# TODO MAKE SURE TO DISCARD METHODS THAT ARE LESS THAN 2 YEARS AND TRIM TO 2 YRS
-
-print('TODO MAKE SURE TO DISCARD METHODS THAT ARE LESS THAN 2 YEARS AND TRIM TO 2 YRS')
-
-import os
-import matplotlib.pyplot as plt
 import numpy as np
+import matplotlib.pyplot as plt
 import pandas as pd
 
-def plot_cdf(data, metric, output_folder):
-    data = np.array(data)
-    data = data.astype(np.float)
-    data = np.sort(data)
-    yvals = np.arange(len(data))/float(len(data))
-    plt.plot(data, yvals, label=metric)
-    plt.xlabel(metric)
-    plt.ylabel('CDF')
-    plt.legend()
-    plt.savefig(os.path.join(output_folder, metric + '.png'))
-    plt.close()
+# Read the data
+file_path = '/home/hisham-kidwai/Documents/HISHAM/Research/Tech-Debt/tech-debt-research/csv-results/full/full_atmosphere.csv'  # Replace with your file path
+data = pd.read_csv(file_path, delimiter=',', encoding='latin1')
 
-def row_category(row: pd.Series) -> int:
-    # convert row to string
-    row = row.to_string()
-    splitted_row = row.split('#')
-    if all([int(x) == 0 for x in splitted_row]):
-        return 0
-    elif any([int(x) == 1 for x in splitted_row]) and int(splitted_row[-1]) == 1:
-        return 1
-    elif any([int(x) == 1 for x in splitted_row]) and int(splitted_row[-1]) == 0:
-        return 2
+# Filter methods that are at least 730 days old
+data = data[data['Age'] > 730]
+
+# Extract relevant columns
+columns = ['SLOCStandard', 'SATD', 'ChangeAtMethodAge']
+filtered_data = data[columns]
+
+# Classify methods into three categories
+category_1 = []
+category_2 = []
+category_3 = []
+
+for index, row in filtered_data.iterrows():
+    sloc_values = row['SLOCStandard'].split('#')
+    satd_values = row['SATD'].split('#')
+    change_at_method_age_values = row['ChangeAtMethodAge'].split('#')
     
+    # Filter out commits older than 2 years (730 days)
+    valid_commits = [i for i, age in enumerate(change_at_method_age_values) if int(age) <= 730]
+    
+    if valid_commits:
+        sloc_values = [sloc_values[i] for i in valid_commits]
+        satd_values = [satd_values[i] for i in valid_commits]
+    
+        # Classify the method
+        if all(val == '0' for val in satd_values):
+            category_1.extend(sloc_values)
+        elif '1' in satd_values and satd_values[-1] == '0':
+            category_2.extend(sloc_values)
+        elif '1' in satd_values and satd_values[-1] == '1':
+            category_3.extend(sloc_values)
 
-def generate_cdfs(input_folder, output_folder):
-    # iterate through each row in each csv file in the input folder
+def compute_cdf(values):
+    unique_vals, counts = np.unique(values, return_counts=True)
+    cumulative_counts = np.cumsum(counts)
+    cdf = cumulative_counts / cumulative_counts[-1]
+    return unique_vals, cdf
 
-    for file in os.listdir(input_folder):
-        if file.endswith('.csv'):
-            df = pd.read_csv(os.path.join(input_folder, file))
-            metrics = ['SLOCStandard', 'Readability', 'SimpleReadability', 'MaintainabilityIndex', 'McCabe', 'totalFanOut', 'uniqueFanOut']
+# Convert SLOC values to integers
+category_1 = [int(val) for val in category_1]
+category_2 = [int(val) for val in category_2]
+category_3 = [int(val) for val in category_3]
 
-    for file in os.listdir(input_folder):
-        if file.endswith('.csv'):
-            df = pd.read_csv(os.path.join(input_folder, file))
-            metrics = ['SLOCStandard', 'Readability', 'SimpleReadability', 'MaintainabilityIndex', 'McCabe', 'totalFanOut', 'uniqueFanOut']
-            metric1 = {}
-            metric2 = {}
-            metric3 = {}
+# Compute CDFs
+x1, y1 = compute_cdf(category_1)
+x2, y2 = compute_cdf(category_2)
+x3, y3 = compute_cdf(category_3)
 
-            for index, row in df.iterrows():
-                category = row_category(row)
-                row = row.to_string()
-                for metric in metrics:
-                    if category == 0:
-                        if metric not in metric1:
-                            metric1[metric] = []
-                        metric1[metric].append(row[metric].split('#')[0])
-                    elif category == 1:
-                        if metric not in metric2:
-                            metric2[metric] = []
-                        metric2[metric].append(row[metric].split('#')[0])
-                    elif category == 2:
-                        if metric not in metric3:
-                            metric3[metric] = []
-                        metric3[metric].append(row[metric].split('#')[0])
+# Plot CDFs
+plt.plot(x1, y1, marker='o', linestyle='-', color='b', label='Never had SATD')
+plt.plot(x2, y2, marker='o', linestyle='-', color='g', label='Had SATD but ended without SATD')
+plt.plot(x3, y3, marker='o', linestyle='-', color='r', label='Had SATD and ended with SATD')
 
-            for metric in metrics:
-                plot_cdf(metric1[metric], metric, output_folder)
-                plot_cdf(metric2[metric], metric, output_folder)
-                plot_cdf(metric3[metric], metric, output_folder)
+# Customize plot
+plt.title('CDF of SLOCStandard')
+plt.xlabel('SLOCStandard')
+plt.ylabel('CDF')
+plt.grid(True)
+plt.legend()
+plt.savefig('cdf_plot.pdf')
 
-if __name__ == '__main__':
-    input_folder = '/home/hisham-kidwai/Documents/HISHAM/Research/Tech-Debt/tech-debt-research/csv-results/part'
-    output_folder = '/home/hisham-kidwai/Documents/HISHAM/Research/Tech-Debt/tech-debt-research/figs'
-
-    generate_cdfs(input_folder, output_folder)
+print("CDF plot saved as 'cdf_plot.pdf'")
