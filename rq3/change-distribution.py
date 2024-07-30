@@ -39,7 +39,7 @@ def compute_cdf(values):
     cdf = cumulative_counts / cumulative_counts[-1]
     return unique_vals, cdf
 
-def plot_cdf(x1, y1, x2, y2, x3, y3, title, output_file):
+def plot_cdf(x1, y1, x2, y2, x3, y3, title, output_file, x_min=None, x_max=None):
     plt.figure()
     plt.plot(x1, y1, marker='o', linestyle='-', color='b', label='Never had SATD')
     plt.plot(x2, y2, marker='o', linestyle='-', color='g', label='Had SATD but ended without SATD')
@@ -49,6 +49,11 @@ def plot_cdf(x1, y1, x2, y2, x3, y3, title, output_file):
     plt.ylabel('CDF')
     plt.grid(True)
     plt.legend()
+    
+    # Set x-axis limits if specified
+    if x_min is not None and x_max is not None:
+        plt.xlim(x_min, x_max)
+
     plt.savefig(output_file)
     plt.close()
 
@@ -80,8 +85,10 @@ def main(input_folder):
         
         title = f'CDF of {metric}'
         output_file = f'figs/rq3/cdf_{metric}.pdf'
+        x_min = 0
+        x_max = 50
         
-        plot_cdf(x1, y1, x2, y2, x3, y3, title, output_file)
+        plot_cdf(x1, y1, x2, y2, x3, y3, title, output_file, x_min, x_max)
 
         print(f"CDF plot saved as '{output_file}'")
 
