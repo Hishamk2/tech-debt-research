@@ -1,7 +1,6 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-# plt.use('Agg')  # Use the 'Agg' backend for non-interactive environments
 import os
 
 def get_removal_times(df):
@@ -9,12 +8,19 @@ def get_removal_times(df):
     removal_indices = []
 
     for index, row in df.iterrows():
+        # Only process methods older than 730 days
+        if int(row['Age']) <= 730:
+            continue
+        
         satd_list = row['SATD'].split('#')
         age_list = row['ChangeAtMethodAge'].split('#')
 
         start_index = None
 
         for i, value in enumerate(satd_list):
+            if int(age_list[i]) > 730:
+                break
+
             if value == '1' and start_index is None:
                 start_index = i
             elif value == '0' and start_index is not None:
@@ -50,7 +56,6 @@ def process_files_in_folder(folder_path):
     for filename in os.listdir(folder_path):
         if filename.endswith(".csv"):
             file_path = os.path.join(folder_path, filename)
-            # df = pd.read_csv(file_path, delimiter='\t')
             df = pd.read_csv(file_path)
             removal_times, _ = get_removal_times(df)
             all_removal_times.extend(removal_times)
@@ -58,8 +63,6 @@ def process_files_in_folder(folder_path):
     return all_removal_times
 
 def main():
-    # folder_path = r"D:\\OneDrive - University of Manitoba\\Documents\\HISHAM\\Research\\Tech-Debt\\csv_folder"
-    # folder_path = '/home/student/kidwaih1/Documents/Tech-Debt/software-evolution/tech-debt-results'
     folder_path = '/home/hisham-kidwai/Documents/HISHAM/Research/Tech-Debt/tech-debt-research/csv-results/part'
     all_removal_times = process_files_in_folder(folder_path)
 
