@@ -7,28 +7,23 @@ def process_csv(file_path, metrics):
     data = pd.read_csv(file_path, delimiter=',', encoding='latin1')
     data = data[data['Age'] > 730]
     
-    filtered_data = data[metrics + ['SATD', 'ChangeAtMethodAge']]
+    filtered_data = data[metrics + ['SATD']]
     
     categories = {metric: {'category_1': [], 'category_2': [], 'category_3': []} for metric in metrics}
     
     for index, row in filtered_data.iterrows():
-        metric_values = {metric: row[metric].split('#') for metric in metrics}
+        metric_values = {metric: row[metric].split('#')[0] for metric in metrics}  # Use only the first value
         satd_values = row['SATD'].split('#')
-        change_at_method_age_values = row['ChangeAtMethodAge'].split('#')
         
-        valid_commits = [i for i, age in enumerate(change_at_method_age_values) if int(age) <= 730]
-        
-        if valid_commits:
-            metric_values = {metric: [values[i] for i in valid_commits] for metric, values in metric_values.items()}
-            satd_values = [satd_values[i] for i in valid_commits]
-        
+        if all(val == '0' for val in satd_values):
             for metric in metrics:
-                if all(val == '0' for val in satd_values):
-                    categories[metric]['category_1'].extend(metric_values[metric])
-                elif '1' in satd_values and satd_values[-1] == '0':
-                    categories[metric]['category_2'].extend(metric_values[metric])
-                elif '1' in satd_values and satd_values[-1] == '1':
-                    categories[metric]['category_3'].extend(metric_values[metric])
+                categories[metric]['category_1'].append(metric_values[metric])
+        elif '1' in satd_values and satd_values[-1] == '0':
+            for metric in metrics:
+                categories[metric]['category_2'].append(metric_values[metric])
+        elif '1' in satd_values and satd_values[-1] == '1':
+            for metric in metrics:
+                categories[metric]['category_3'].append(metric_values[metric])
     
     return categories
 
