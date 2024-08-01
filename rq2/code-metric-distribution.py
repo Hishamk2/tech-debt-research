@@ -226,7 +226,8 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 
-SRCDIR = "../../software-evolution/tech-debt-results/"
+# SRCDIR = "../../software-evolution/tech-debt-results/"
+SRCDIR = '/home/hisham-kidwai/Documents/HISHAM/Research/Tech-Debt/csv-files-satd/'
 
 def build_indices(line):
     indexes = {}
@@ -250,26 +251,27 @@ def process(metrics_list):
     metrics = {metric: {'satd': [], 'not_satd': []} for metric in metrics_list}
     
     for file in os.listdir(SRCDIR):
-        fr = open(SRCDIR + file, "r")
-        line = fr.readline()  # skip header
-        indices = build_indices(line)
-        lines = fr.readlines()
-        for line in lines:
-            data = line.strip().split("\t")
-            for metric_name in metrics_list:
-                metric = data[indices[metric_name]]
-                metric = metric.split("#")
-                metric = float(metric[0])
+        if file.endswith('.csv'):
+            fr = open(SRCDIR + file, "r")
+            line = fr.readline()  # skip header
+            indices = build_indices(line)
+            lines = fr.readlines()
+            for line in lines:
+                data = line.strip().split("\t")
+                for metric_name in metrics_list:
+                    metric = data[indices[metric_name]]
+                    metric = metric.split("#")
+                    metric = float(metric[0])
 
-                satd = data[indices["SATD"]]
-                satd = satd.split("#")
-                
-                if metric < 0:
-                    continue  # something is wrong
-                if check_satd(satd):
-                    metrics[metric_name]['satd'].append(metric)
-                else:
-                    metrics[metric_name]['not_satd'].append(metric)
+                    satd = data[indices["SATD"]]
+                    satd = satd.split("#")
+                    
+                    if metric < 0:
+                        continue  # something is wrong
+                    if check_satd(satd):
+                        metrics[metric_name]['satd'].append(metric)
+                    else:
+                        metrics[metric_name]['not_satd'].append(metric)
     return metrics
 
 def ecdf(a):
@@ -294,7 +296,9 @@ def draw_graph(metrics):
         plt.ylabel("CDF")
         plt.xlim(0, 1)
         plt.title(f"CDF of {metric_name}")
-        plt.show()
+        # plt.show()
+        plt.savefig('yeet.pdf')
+
 
 if __name__ == "__main__":
     # SLOCStandard
