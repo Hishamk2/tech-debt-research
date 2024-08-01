@@ -297,7 +297,7 @@ def draw_graph(metrics):
         plt.xlim(0, 1)
         plt.title(f"CDF of {metric_name}")
         # plt.show()
-        plt.savefig('yeet.pdf')
+        plt.savefig(f'{metric_name}.pdf')
 
 
 if __name__ == "__main__":
