@@ -226,6 +226,8 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 
+METRIC_VALUE = 'first'
+
 # SRCDIR = "../../software-evolution/tech-debt-results/"
 SRCDIR = '/home/hisham-kidwai/Documents/HISHAM/Research/Tech-Debt/csv-files-satd/'
 
@@ -261,7 +263,20 @@ def process(metrics_list):
                 for metric_name in metrics_list:
                     metric = data[indices[metric_name]]
                     metric = metric.split("#")
-                    metric = float(metric[0])
+
+                    if METRIC_VALUE == 'first':
+                        # first value of metric
+                        metric = float(metric[0])
+                    elif METRIC_VALUE == 'mean':
+                        # get the average of the metric
+                        metric = [float(m) for m in metric]
+                        metric = np.mean(metric)
+                    elif METRIC_VALUE == 'last':
+                        # get the last value of the metric list
+                        metric = float(metric[-1])
+                    else:
+                        print('ENTER A VALID METRIC VALUE')
+
 
                     satd = data[indices["SATD"]]
                     satd = satd.split("#")
@@ -285,19 +300,24 @@ def draw_graph(metrics):
         
         x, y = ecdf(data['satd'])
         ln = plt.plot(x, y)
-        plt.setp(ln, ls="-", linewidth=3, color='r', label=f'{metric_name} SATD')
+        plt.setp(ln, ls="-", linewidth=3, color='r', label='SATD')
         
         x, y = ecdf(data['not_satd'])
         ln = plt.plot(x, y)
-        plt.setp(ln, ls="--", linewidth=3, color='blue', label=f'{metric_name} NOT_SATD')
+        plt.setp(ln, ls="--", linewidth=3, color='blue', label='NOT_SATD')
         
         plt.legend()
         plt.xlabel(metric_name)
         plt.ylabel("CDF")
-        plt.xlim(0, 1)
+        # plt.xlim(0, 1)
         plt.title(f"CDF of {metric_name}")
         # plt.show()
-        plt.savefig(f'{metric_name}.pdf')
+        if METRIC_VALUE == 'first':
+            plt.savefig(f'figs/rq2/first/f_{metric_name}.pdf')
+        elif METRIC_VALUE == 'mean':
+            plt.savefig(f'figs/rq2/mean/m_{metric_name}.pdf')
+        elif METRIC_VALUE == 'last':
+            plt.savefig(f'figs/rq2/last/l_{metric_name}.pdf')
 
 
 if __name__ == "__main__":
