@@ -308,7 +308,8 @@ def draw_graph(metrics):
     plt.xlabel("MI")
     plt.ylabel("CDF")
     # plt.xlim(0, 2000)
-    plt.show()
+    plt.savefig('figs/rq4/bugginess.pdf')
+    # plt.show()
 
 if __name__ == "__main__":
     # metrics  = process()
