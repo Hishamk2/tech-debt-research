@@ -28,34 +28,28 @@ def process():
         if file.endswith('.csv'):
             fr = open(SRCDIR + file, "r")
             line = fr.readline() # skip header
-            indexes = build_indexes(line)
+            indices = build_indexes(line)
             lines = fr.readlines()
             for line in lines:
-                row = line.strip().split("\t")
-                metric = row[indexes["SLOCStandard"]]
-                metric = metric.split("#")
-                metric = float(metric[0])
-                
-                if int(row[indexes['Age']]) <= 730:
-                    continue
-            
-                satd_list = row[indexes['SATD']].split('#')
-                age_list = row[indexes['ChangeAtMethodAge']].split('#')
+                row = line.strip().split("\t")                
+                if int(row[indices['Age']]) > 730: # Make sure the method is at least 2 years old     
+                    satd_list = row[indices['SATD']].split('#')
+                    age_list = row[indices['ChangeAtMethodAge']].split('#')
 
-                start_index = None
+                    start_index = None
 
-                for i, value in enumerate(satd_list):
-                    if int(age_list[i]) > 730:
-                        break
+                    for i, value in enumerate(satd_list):
+                        if int(age_list[i]) > 730:
+                            break
 
-                    if value == '1' and start_index is None:
-                        start_index = i
-                    elif value == '0' and start_index is not None:
-                        end_index = i
-                        start_age = int(age_list[start_index])
-                        end_age = int(age_list[end_index])
-                        removal_times.append(end_age - start_age)
-                        start_index = None  # Reset start index for next SATD segment   
+                        if value == '1' and start_index is None:
+                            start_index = i
+                        elif value == '0' and start_index is not None:
+                            end_index = i
+                            start_age = int(age_list[start_index])
+                            end_age = int(age_list[end_index])
+                            removal_times.append(end_age - start_age)
+                            start_index = None  # Reset start index for next SATD segment   
     
     return removal_times         
 
@@ -80,7 +74,8 @@ def draw_graph(metrics):
     plt.xlabel("MI")
     plt.ylabel("CDF")
     # plt.xlim(0, 100)
-    plt.show()
+    plt.savefig(f'figs/rq1/removal_times.pdf')
+    # plt.show()
 
 if __name__ == "__main__":
     metrics  = process()
