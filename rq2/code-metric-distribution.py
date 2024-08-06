@@ -2,7 +2,7 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 
-METRIC_VALUE = 'last' # first, mean, last
+METRIC_VALUE = 'first' # first, mean, last
 
 # SRCDIR = "../../software-evolution/tech-debt-results/"
 SRCDIR = '/home/hisham-kidwai/Documents/HISHAM/Research/Tech-Debt/csv-files-satd/'
@@ -21,6 +21,12 @@ def check_satd(satd):
             return True
     return False
 
+def find_index_to_stop(age_list: list):
+    for i, age in enumerate(age_list):
+        if int(age) > 730:
+            return i
+    return -1
+
 def process(metrics_list):
     """
     Have the different metrics in a dictionary
@@ -35,31 +41,40 @@ def process(metrics_list):
             indices = build_indices(line)
             lines = fr.readlines()
             for line in lines:
-                data = line.strip().split("\t")
-                for metric_name in metrics_list:
-                    metric = data[indices[metric_name]]
-                    metric = metric.split("#")
+                row = line.strip().split("\t")
 
-                    if METRIC_VALUE == 'first':
-                        metric = float(metric[0])
-                    elif METRIC_VALUE == 'mean':
-                        metric = [float(m) for m in metric]
-                        metric = np.mean(metric)
-                    elif METRIC_VALUE == 'last':
-                        metric = float(metric[-1])
-                    else:
-                        print('ENTER A VALID METRIC VALUE')
+                if int(row[indices['Age']]) > 730: # Make sure the method is at least 2 years old     
+                    for metric_name in metrics_list:
+                        metric = row[indices[metric_name]]
+                        metric = metric.split("#")
+                        age_list = row[indices['ChangeAtMethodAge']].split('#')
+
+                        index_to_stop = find_index_to_stop(age_list)
+                        if index_to_stop != -1:
+                                metric = metric[:index_to_stop]
+
+                        if METRIC_VALUE == 'first':
+                            metric = float(metric[0])
+                        elif METRIC_VALUE == 'mean':
+                            # print(file, row[indices['file']])
+                            # print(metric)
+                            metric = [float(m) for m in metric]
+                            metric = np.mean(metric)
+                        elif METRIC_VALUE == 'last':
+                            metric = float(metric[-1])
+                        else:
+                            print('ENTER A VALID METRIC VALUE')
 
 
-                    satd = data[indices["SATD"]]
-                    satd = satd.split("#")
-                    
-                    if metric < 0:
-                        continue  # something is wrong
-                    if check_satd(satd):
-                        metrics[metric_name]['satd'].append(metric)
-                    else:
-                        metrics[metric_name]['not_satd'].append(metric)
+                        satd = row[indices["SATD"]]
+                        satd = satd.split("#")
+                        
+                        if metric < 0:
+                            continue  # something is wrong
+                        if check_satd(satd):
+                            metrics[metric_name]['satd'].append(metric)
+                        else:
+                            metrics[metric_name]['not_satd'].append(metric)
     return metrics
 
 def ecdf(a):
