@@ -7,19 +7,12 @@ SRCDIR = '/home/hisham-kidwai/Documents/HISHAM/Research/Tech-Debt/csv-files-satd
 
 
 
-def build_indexes(line):
-    indexes = {}
+def build_indices(line):
+    indices = {}
     data = line.strip().split("\t")
     for i in range(len(data)):
-        indexes[data[i]] = i
-    return indexes    
-
-def check_satd(satd):
-    for s in satd:
-        s = int(s)
-        if s == 1:
-            return True
-    return False
+        indices[data[i]] = i
+    return indices    
             
 def process():
     removal_times = []
@@ -27,11 +20,13 @@ def process():
     for file in os.listdir(SRCDIR):
         if file.endswith('.csv'):
             fr = open(SRCDIR + file, "r")
-            line = fr.readline() # skip header
-            indices = build_indexes(line)
+            header = fr.readline() # skip header
+            indices = build_indices(header)
             lines = fr.readlines()
+            
             for line in lines:
-                row = line.strip().split("\t")                
+                row = line.strip().split("\t")             
+
                 if int(row[indices['Age']]) > 730: # Make sure the method is at least 2 years old     
                     satd_list = row[indices['SATD']].split('#')
                     age_list = row[indices['ChangeAtMethodAge']].split('#')
@@ -39,16 +34,20 @@ def process():
                     start_index = None
 
                     for i, value in enumerate(satd_list):
-                        if int(age_list[i]) > 730:
+                        if int(age_list[i]) > 730: # if the current commit is more than 2 yrs old, done
                             break
 
                         if value == '1' and start_index is None:
                             start_index = i
                         elif value == '0' and start_index is not None:
                             end_index = i
+
                             start_age = int(age_list[start_index])
                             end_age = int(age_list[end_index])
-                            removal_times.append(end_age - start_age)
+                            removal_time = end_age - start_age
+                            
+                            removal_times.append(removal_time)
+                            
                             start_index = None  # Reset start index for next SATD segment   
     
     return removal_times         
@@ -59,19 +58,11 @@ def ecdf(a):
     return x, cusum / cusum[-1]
 
 def draw_graph(metrics):
-    # x, y = ecdf(metrics['satd'])
-    # ln = (plt.plot(x, y))
-    # plt.setp(ln, ls="-", linewidth=3, color='r', label='SATD')
-
-    # x, y = ecdf(metrics['not_satd'])
-    # ln = (plt.plot(x, y))
-    # plt.setp(ln, ls="--", linewidth=3, color='blue', label='NOT_SATD')
-
     x, y = ecdf(metrics)
     ln = plt.plot(x,y)
     plt.setp(ln, ls="-", linewidth=3, color='r', label='Removal Times')
     plt.legend()
-    plt.xlabel("MI")
+    plt.xlabel("SATD Removal Time (days)")
     plt.ylabel("CDF")
     # plt.xlim(0, 100)
     plt.savefig(f'figs/rq1/removal_times.pdf')
