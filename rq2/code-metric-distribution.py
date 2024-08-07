@@ -5,7 +5,8 @@ import matplotlib.pyplot as plt
 METRIC_VALUE = 'first' # first, mean, last
 
 # SRCDIR = "../../software-evolution/tech-debt-results/"
-SRCDIR = '/home/hisham-kidwai/Documents/HISHAM/Research/Tech-Debt/csv-files-satd/'
+# SRCDIR = '/home/hisham-kidwai/Documents/HISHAM/Research/Tech-Debt/csv-files-satd/'
+SRCDIR = '/home/hisham-kidwai/Documents/HISHAM/Research/Tech-Debt/tech-debt-research/csv-results/full/'
 
 def build_indices(line):
     indexes = {}
@@ -40,7 +41,14 @@ def process(metrics_list):
             line = fr.readline()  # skip header
             indices = build_indices(line)
             lines = fr.readlines()
+
+            # counter = 0
+
             for line in lines:
+                # counter += 1
+                # if counter > 100:
+                #     break
+
                 row = line.strip().split("\t")
 
                 if int(row[indices['Age']]) > 730: # Make sure the method is at least 2 years old     
@@ -54,14 +62,22 @@ def process(metrics_list):
                                 metric = metric[:index_to_stop]
 
                         if METRIC_VALUE == 'first':
+                            # print(metric)
                             metric = float(metric[0])
+                            # print(file, row[indices['file']])
+                            # print(metric)
+                        
                         elif METRIC_VALUE == 'mean':
                             # print(file, row[indices['file']])
                             # print(metric)
                             metric = [float(m) for m in metric]
                             metric = np.mean(metric)
+                            # print(metric)
                         elif METRIC_VALUE == 'last':
+                            # print(metric)
                             metric = float(metric[-1])
+                            # print(file, row[indices['file']])
+                            # print(metric)
                         else:
                             print('ENTER A VALID METRIC VALUE')
 
@@ -125,6 +141,7 @@ def draw_graph(metrics):
 
 if __name__ == "__main__":
     metrics_list = ['SLOCStandard', 'Readability', 'SimpleReadability', 'MaintainabilityIndex', 'McCabe', 'totalFanOut', 'uniqueFanOut']
+    # metrics_list = ['SLOCStandard']
     metrics = process(metrics_list)
     draw_graph(metrics)
 
