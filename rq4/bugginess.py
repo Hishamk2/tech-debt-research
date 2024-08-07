@@ -200,6 +200,15 @@ def draw_graph(metrics):
     # plt.savefig('figs/rq4/bugginess.pdf')
     plt.show()
 
+
+def find_index_to_stop(age_list: list):
+    for i, age in enumerate(age_list):
+        if int(age) > 730:
+            return i
+    return -1
+
+
+
 if __name__ == "__main__":
     # metrics  = process()
     # draw_graph(metrics)
@@ -224,41 +233,59 @@ if __name__ == "__main__":
             num_not_satd_methods = 0
             total_methods = 0
 
+            # counter = 0
+
             for line in lines:
+                # counter += 1
+                # if counter > 100:
+                #     break
+                
                 row = line.strip().split("\t")
                 buggy_commit = row[indices['Buggycommiit']].split("#")
                 tangled = row[indices['TangledWMoveandFileRename']].split("#")
                 satd = row[indices['SATD']].split("#")                                                                                                              
                 method_age = row[indices['Age']]
                 change_at_method_age = row[indices['ChangeAtMethodAge']].split("#")
-                index_to_stop = get_index_greater_than_730(change_at_method_age)
+                index_to_stop = find_index_to_stop(change_at_method_age)
+
+
+                # just trim all the rows (the var as above)
+                # to the index_to_stop
+                # print(file, row[indices['file']])
+                # print(buggy_commit)
+                if index_to_stop != -1:
+                    buggy_commit = buggy_commit[:index_to_stop]
+                    tangled = tangled[:index_to_stop]
+                    satd = satd[:index_to_stop]
+                # print(buggy_commit)    
 
                 is_satd = False
                 if check_satd(satd):
                     is_satd = True    
 
                 buggy = False   
-                # if int(method_age) > 730:
-                if is_satd:
-                    num_satd_methods += 1
-                else:
-                    num_not_satd_methods += 1
-
-                for i in range(0, index_to_stop + 1):
-                    if (buggy_commit[i] == '1' and tangled[i] == '1'):
-                        buggy = True
-                        if (is_satd):
-                            s_buggy_methods += 1
-                        else:
-                            ns_buggy_methods += 1
-                        break
-
-                if not buggy:
+                if int(row[indices['Age']]) > 730:
                     if is_satd:
-                        s_not_buggy_methods += 1
+                        num_satd_methods += 1
                     else:
-                        ns_not_buggy_methods += 1
-                total_methods += 1
+                        num_not_satd_methods += 1
+                    # Important we DO NOT include the index_to_stop in the loop 
+                    # as index_to_stop is the index of the first element that is greater than 730
+                    for i in range(0, index_to_stop):
+                        if (buggy_commit[i] == '1' and tangled[i] == '1'):
+                            buggy = True
+                            if (is_satd):
+                                s_buggy_methods += 1
+                            else:
+                                ns_buggy_methods += 1
+                            break
+
+                    if not buggy:
+                        if is_satd:
+                            s_not_buggy_methods += 1
+                        else:
+                            ns_not_buggy_methods += 1
+                    total_methods += 1
 
             satd_buggy_proportion = s_buggy_methods / num_satd_methods
             not_satd_buggy_proportion = ns_buggy_methods / num_not_satd_methods
@@ -268,17 +295,17 @@ if __name__ == "__main__":
 
 
 
-            print(file)
-            print(s_buggy_methods + s_not_buggy_methods + ns_buggy_methods + ns_not_buggy_methods)
-            print(num_satd_methods, num_not_satd_methods)
-            print(total_methods)
-            assert s_buggy_methods+s_not_buggy_methods+ ns_buggy_methods+ ns_not_buggy_methods == total_methods
-            assert num_satd_methods+num_not_satd_methods == total_methods
-            print(s_buggy_methods, s_not_buggy_methods, ns_buggy_methods, ns_not_buggy_methods)
+    #         print(file)
+    #         print(s_buggy_methods + s_not_buggy_methods + ns_buggy_methods + ns_not_buggy_methods)
+    #         print(num_satd_methods, num_not_satd_methods)
+    #         print(total_methods)
+    #         assert s_buggy_methods+s_not_buggy_methods+ ns_buggy_methods+ ns_not_buggy_methods == total_methods
+    #         assert num_satd_methods+num_not_satd_methods == total_methods
+    #         print(s_buggy_methods, s_not_buggy_methods, ns_buggy_methods, ns_not_buggy_methods)
 
-            print('\n', '%.2f' % (s_buggy_methods / num_satd_methods), '%.2f' % (ns_buggy_methods / num_not_satd_methods))
-    print([f'{x:.2f}' for x in satd_buggy_proportions])
-    print([f'{x:.2f}' for x in not_satd_buggy_proportions])
+    #         print('\n', '%.2f' % (s_buggy_methods / num_satd_methods), '%.2f' % (ns_buggy_methods / num_not_satd_methods))
+    # print([f'{x:.2f}' for x in satd_buggy_proportions])
+    # print([f'{x:.2f}' for x in not_satd_buggy_proportions])
 
     metrics = {'satd' : satd_buggy_proportions, 'not_satd': not_satd_buggy_proportions}
     draw_graph(metrics)
