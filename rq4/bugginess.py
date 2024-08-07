@@ -197,8 +197,8 @@ def draw_graph(metrics):
     plt.xlabel("Buggy Method Proportion")
     plt.ylabel("CDF")
     # plt.xlim(0, 2000)
-    # plt.savefig('figs/rq4/bugginess.pdf')
-    plt.show()
+    plt.savefig('figs/rq4/tWHAT_bugginess.pdf')
+    # plt.show()
 
 
 def find_index_to_stop(age_list: list):
@@ -272,7 +272,10 @@ if __name__ == "__main__":
                     # Important we DO NOT include the index_to_stop in the loop 
                     # as index_to_stop is the index of the first element that is greater than 730
                     for i in range(0, index_to_stop):
-                        if (buggy_commit[i] == '1' and tangled[i] == '1'):
+                        if (len(buggy_commit) != len(tangled)):
+                            print(file, row[indices['file']])
+                            print('SMTHN WRONG, LOOK AT ME')
+                        elif (buggy_commit[i] == '1' and (tangled[i] == '1')):
                             buggy = True
                             if (is_satd):
                                 s_buggy_methods += 1
