@@ -2,7 +2,7 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 
-METRIC_VALUE = 'first' # first, mean, last
+METRIC_VALUE = 'last' # first, mean, last
 
 # SRCDIR = "../../software-evolution/tech-debt-results/"
 # SRCDIR = '/home/hisham-kidwai/Documents/HISHAM/Research/Tech-Debt/csv-files-satd/'
@@ -53,20 +53,20 @@ def process(metrics_list):
 
                 if int(row[indices['Age']]) > 730: # Make sure the method is at least 2 years old     
                     for metric_name in metrics_list:
-                        metric = row[indices[metric_name]]
-                        metric = metric.split("#")
+                        metric = row[indices[metric_name]].split("#")
                         age_list = row[indices['ChangeAtMethodAge']].split('#')
+                        satd = row[indices["SATD"]].split("#")
 
                         index_to_stop = find_index_to_stop(age_list)
-                        if index_to_stop != -1:
+                        if index_to_stop != -1: # if index_to_stop is -1, then there are no commits with age > 730 so keep as is
                                 metric = metric[:index_to_stop]
+                                satd = satd[:index_to_stop]
 
                         if METRIC_VALUE == 'first':
                             # print(metric)
                             metric = float(metric[0])
                             # print(file, row[indices['file']])
                             # print(metric)
-                        
                         elif METRIC_VALUE == 'mean':
                             # print(file, row[indices['file']])
                             # print(metric)
@@ -80,12 +80,9 @@ def process(metrics_list):
                             # print(metric)
                         else:
                             print('ENTER A VALID METRIC VALUE')
-
-
-                        satd = row[indices["SATD"]]
-                        satd = satd.split("#")
                         
                         if metric < 0:
+                            print('NEGATIVE METRIC VALUE')
                             continue  # something is wrong
                         if check_satd(satd):
                             metrics[metric_name]['satd'].append(metric)
@@ -122,11 +119,14 @@ def draw_graph(metrics):
         elif metric_name == 'MaintainabilityIndex':
             pass
         elif metric_name == 'McCabe':
-            plt.xlim(0, 75)
+            pass
+            # plt.xlim(0, 75)
         elif metric_name == 'totalFanOut':
-            plt.xlim(0, 100)
+            pass
+            # plt.xlim(0, 100)
         elif metric_name == 'uniqueFanOut':
-            plt.xlim(0, 75)
+            pass
+            # plt.xlim(0, 75)
             
         # plt.xlim(0, 1)
         plt.title(f"CDF of {metric_name}")
