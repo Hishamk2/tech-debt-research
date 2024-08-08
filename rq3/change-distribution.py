@@ -54,13 +54,14 @@ def process(metrics_list):
                 
                 if int(row[indices['Age']]) > 730: # Make sure the method is at least 2 years old
                     for metric_name in metrics_list:
-                        metric = row[indices[metric_name]]
-                        metric = metric.split("#")
+                        metric = row[indices[metric_name]].split("#")
                         age_list = row[indices['ChangeAtMethodAge']].split('#')
+                        satd = row[indices["SATD"]].split("#")
 
                         index_to_stop = find_index_to_stop(age_list)
                         if index_to_stop != -1:
                                 metric = metric[:index_to_stop]
+                                satd = satd[:index_to_stop]
 
                         if METRIC_VALUE == 'first':
                             # take the second index value cuz the first one is 0 for all 3 metrics
@@ -89,9 +90,6 @@ def process(metrics_list):
                             # print(metric)
                         else:
                             print("ENTER A VALID METRIC VALUE")
-
-                        satd = row[indices["SATD"]]
-                        satd = satd.split("#")
                         
                         if metric < 0:
                             continue  # something is wrong
