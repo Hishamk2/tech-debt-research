@@ -281,6 +281,11 @@ if __name__ == "__main__":
                         num_not_satd_methods += 1
                     # Important we DO NOT include the index_to_stop in the loop 
                     # as index_to_stop is the index of the first element that is greater than 730
+
+                    # IMPORTANT: AS IF INDEX_TO_STOP IS -1 WE STILL WANT TO ENTER THE LOOP
+                    # -1 MEANS GO TILL END
+                    if (index_to_stop == -1):
+                        index_to_stop = len(buggy_commit)
                     for i in range(0, index_to_stop):
                         if (len(buggy_commit) != len(tangled)):
                             print(file, row[indices['file']])
