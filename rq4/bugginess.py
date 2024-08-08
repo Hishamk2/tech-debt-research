@@ -268,11 +268,11 @@ if __name__ == "__main__":
 
                 buggy = False   
                 if int(row[indices['Age']]) > 730:
-                    print(file)
-                    print(row[indices['file']])
-                    print(buggy_commit)
-                    print(tangled)
-                    print(index_to_stop)
+                    # print(file)
+                    # print(row[indices['file']])
+                    # print(buggy_commit)
+                    # print(tangled)
+                    # print(index_to_stop)
                     # if (row[indices['file'] == '1153.json']):
                         # print(index_to_stop, 'asdsdds\n\n\n\n')
                     if is_satd:
@@ -290,9 +290,10 @@ if __name__ == "__main__":
                         if (len(buggy_commit) != len(tangled)):
                             print(file, row[indices['file']])
                             print('SMTHN WRONG, LOOK AT ME')
+                        # elif (buggy_commit[i] == '1' and (tangled[i] == '1' or tangled[i] == '2' or tangled[i] == '3' or tangled[i] == '4' or tangled[i] == '5')):
                         elif (buggy_commit[i] == '1' and (tangled[i] == '1')):
                             # print('put print here to see when it is supposed to be buggy is it actually? and alos put print other place where no buggy to see if it handles no buggy properlu')
-                            print(i, '\n\n\n')
+                            # print(i, '\n\n\n')
                             buggy = True
                             if (is_satd):
                                 s_buggy_methods += 1
