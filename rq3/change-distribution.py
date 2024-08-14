@@ -3,7 +3,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # global variable for whehter to take the metric as the first value, last value or average
-METRIC_VALUE = 'last'
 
 # SRCDIR = "../../software-evolution/tech-debt-results/"
 SRCDIR = '/home/hisham-kidwai/Documents/HISHAM/Research/Tech-Debt/csv-files-satd/'
@@ -35,6 +34,12 @@ def process(metrics_list):
     IMPORTANT, ALL 3 METRICS (NewAdditions, DiffSizes, EditDistances) ARE 0 IN THE FIRST COMMIT
     """
     metrics = {metric: {'satd': [], 'not_satd': []} for metric in metrics_list}
+    # metrics = {}
+    # for i, metric in enumerate(metrics_list):
+    #     metrics[i] = {metric: {'satd': [], 'not_satd': []}}
+    #     print(metrics)
+    # metrics[len(metrics_list)] = {'numRevisions': {'satd': [], 'not_satd': []}}
+    # print(metrics)
     
     for file in os.listdir(SRCDIR):
         if file.endswith('.csv'):
@@ -63,40 +68,17 @@ def process(metrics_list):
                                 metric = metric[:index_to_stop]
                                 satd = satd[:index_to_stop]
 
-                        if METRIC_VALUE == 'first':
-                            # take the second index value cuz the first one is 0 for all 3 metrics
-                            # print(metric)
-                            if (len(metric) == 1):
-                                metric = float(metric[0])
-                            else:
-                                metric = float(metric[1])
-                            # print(file, row[indices['file']])
-                            # print(metric)
-                        elif METRIC_VALUE == 'mean':
-                            # get the average of the metric exlcuding the first one
-                            # print(metric)
-                            if len(metric) == 1:
-                                metric = float(metric[0])
-                            else:
-                                metric = metric[1:]
-                                metric = [float(m) for m in metric]
-                                metric = np.mean(metric)
-                            # print(file, row[indices['file']])
-                            # print(metric)
-                        elif METRIC_VALUE == 'last':
-                            # print(metric)
-                            metric = float(metric[-1])
-                            # print(file, row[indices['file']])
-                            # print(metric)
-                        else:
-                            print("ENTER A VALID METRIC VALUE")
+                        # get the sum of the metric
+                        sum = 0
+                        for m in metric:
+                            sum += int(m)
                         
                         if metric < 0:
                             continue  # something is wrong
                         if check_satd(satd):
-                            metrics[metric_name]['satd'].append(metric)
+                            metrics[metric_name]['satd'].append(sum)
                         else:
-                            metrics[metric_name]['not_satd'].append(metric)
+                            metrics[metric_name]['not_satd'].append(sum)
     return metrics
 
 def ecdf(a):
@@ -120,24 +102,26 @@ def draw_graph(metrics):
         plt.xlabel(metric_name)
         plt.ylabel("CDF")
         if metric_name == 'NewAdditions':
-            plt.xlim(0, 100)
+            plt.xlim(0, 500)
         elif metric_name == 'DiffSizes':
-            plt.xlim(0, 100)
+            plt.xlim(0, 1000)
         elif metric_name == 'EditDistances':
-            plt.xlim(0, 2000)
+            plt.xlim(0, 20000)
+        elif metric_name == 'CriticalEditDistances':
+            plt.xlim(0, 20000)
         # plt.xlim(0, 1)
         plt.title(f"CDF of {metric_name}")
-        # plt.show()
-        if METRIC_VALUE == 'first':
-            plt.savefig(f'figs/rq3/first/f_{metric_name}.pdf')
-        elif METRIC_VALUE == 'mean':
-            plt.savefig(f'figs/rq3/mean/m_{metric_name}.pdf')
-        elif METRIC_VALUE == 'last':
-            plt.savefig(f'figs/rq3/last/l_{metric_name}.pdf')
+        plt.show()
+        # if METRIC_VALUE == 'first':
+        #     plt.savefig(f'figs/rq3/first/f_{metric_name}.pdf')
+        # elif METRIC_VALUE == 'mean':
+        #     plt.savefig(f'figs/rq3/mean/m_{metric_name}.pdf')
+        # elif METRIC_VALUE == 'last':
+        #     plt.savefig(f'figs/rq3/last/l_{metric_name}.pdf')
 
 
 if __name__ == "__main__":
-    metrics_list = ['NewAdditions', 'DiffSizes', 'EditDistances']
+    metrics_list = ['NewAdditions', 'DiffSizes', 'EditDistances', 'CriticalEditDistances']
     # metrics_list = ['NewAdditions']
     metrics = process(metrics_list)
     draw_graph(metrics)
