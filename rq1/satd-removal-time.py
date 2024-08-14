@@ -65,7 +65,14 @@ def draw_graph(metrics):
     plt.xlabel("SATD Removal Time (days)")
     plt.ylabel("CDF")
     # plt.xlim(0, 100)
-    plt.savefig(f'figs/rq1/removal_times.pdf')
+
+    scale = 'log'
+    if scale == 'log':
+        plt.xscale('log')
+        plt.savefig(f'figs/rq1/log/removal_times.pdf')
+    else:
+        plt.savefig(f'figs/rq1/removal_times.pdf')
+
     # plt.show()
 
 if __name__ == "__main__":
