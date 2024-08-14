@@ -2,11 +2,12 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 
-METRIC_VALUE = 'last' # first, mean, last
+# SCALE = 'log'
+# METRIC_VALUE = 'mean' # first, mean, last
 
 # SRCDIR = "../../software-evolution/tech-debt-results/"
-# SRCDIR = '/home/hisham-kidwai/Documents/HISHAM/Research/Tech-Debt/csv-files-satd/'
-SRCDIR = '/home/hisham-kidwai/Documents/HISHAM/Research/Tech-Debt/tech-debt-research/csv-results/full/'
+SRCDIR = '/home/hisham-kidwai/Documents/HISHAM/Research/Tech-Debt/csv-files-satd/'
+# SRCDIR = '/home/hisham-kidwai/Documents/HISHAM/Research/Tech-Debt/tech-debt-research/csv-results/full/'
 
 def build_indices(line):
     indexes = {}
@@ -28,7 +29,7 @@ def find_index_to_stop(age_list: list):
             return i
     return -1
 
-def process(metrics_list):
+def process(metrics_list, METRIC_VALUE):
     """
     Have the different metrics in a dictionary
     Each key will be a metric and the value will be a dictionary with 'satd' and 'not_satd' lists
@@ -95,7 +96,7 @@ def ecdf(a):
     cusum = np.cumsum(counts)
     return x, cusum / cusum[-1]
 
-def draw_graph(metrics):
+def draw_graph(metrics, METRIC_VALUE, SCALE):
     for metric_name, data in metrics.items():
         plt.figure()
         
@@ -110,38 +111,54 @@ def draw_graph(metrics):
         plt.legend()
         plt.xlabel(metric_name)
         plt.ylabel("CDF")
-        if metric_name == 'SLOCStandard':
-            plt.xlim(0, 250)
-        elif metric_name == 'Readability':
-            pass
-        elif metric_name == 'SimpleReadability':
-            pass
-        elif metric_name == 'MaintainabilityIndex':
-            pass
-        elif metric_name == 'McCabe':
-            pass
-            # plt.xlim(0, 75)
-        elif metric_name == 'totalFanOut':
-            pass
-            # plt.xlim(0, 100)
-        elif metric_name == 'uniqueFanOut':
-            pass
-            # plt.xlim(0, 75)
+
+        plt.xscale(SCALE)
+        if SCALE != 'log':
+            if metric_name == 'SLOCStandard':
+                plt.xlim(0, 250)
+            elif metric_name == 'Readability':
+                pass
+            elif metric_name == 'SimpleReadability':
+                pass
+            elif metric_name == 'MaintainabilityIndex':
+                pass
+            elif metric_name == 'McCabe':
+                # pass
+                plt.xlim(0, 75)
+            elif metric_name == 'totalFanOut':
+                # pass
+                plt.xlim(0, 100)
+            elif metric_name == 'uniqueFanOut':
+                # pass
+                plt.xlim(0, 75)
             
         # plt.xlim(0, 1)
         plt.title(f"CDF of {metric_name}")
         # plt.show()
         if METRIC_VALUE == 'first':
-            plt.savefig(f'figs/rq2/first/f_{metric_name}.pdf')
+            if SCALE == 'log':
+                plt.savefig(f'figs/rq2/first/log/f_{metric_name}.pdf')
+            else:
+                plt.savefig(f'figs/rq2/first/linear/f_{metric_name}.pdf')
         elif METRIC_VALUE == 'mean':
-            plt.savefig(f'figs/rq2/mean/m_{metric_name}.pdf')
+            if SCALE == 'log':
+                plt.savefig(f'figs/rq2/mean/log/m_{metric_name}.pdf')
+            else:
+                plt.savefig(f'figs/rq2/mean/linear/m_{metric_name}.pdf')
         elif METRIC_VALUE == 'last':
-            plt.savefig(f'figs/rq2/last/l_{metric_name}.pdf')
-
+            if SCALE == 'log':
+                plt.savefig(f'figs/rq2/last/log/l_{metric_name}.pdf')
+            else:
+                plt.savefig(f'figs/rq2/last/linear/l_{metric_name}.pdf')
 
 if __name__ == "__main__":
     metrics_list = ['SLOCStandard', 'Readability', 'SimpleReadability', 'MaintainabilityIndex', 'McCabe', 'totalFanOut', 'uniqueFanOut']
     # metrics_list = ['SLOCStandard']
-    metrics = process(metrics_list)
-    draw_graph(metrics)
+    # metrics = process(metrics_list)
+    # draw_graph(metrics)
+    # Loop over METRIC_VALUE and SCALE
+    for METRIC_VALUE in ['first', 'mean', 'last']:
+        for SCALE in ['log', 'linear']:
+            metrics = process(metrics_list, METRIC_VALUE)
+            draw_graph(metrics, METRIC_VALUE, SCALE)
 
