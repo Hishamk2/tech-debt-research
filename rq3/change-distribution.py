@@ -73,7 +73,7 @@ def process(metrics_list):
                         for m in metric:
                             sum += int(m)
                         
-                        if metric < 0:
+                        if sum < 0:
                             continue  # something is wrong
                         if check_satd(satd):
                             metrics[metric_name]['satd'].append(sum)
@@ -101,23 +101,26 @@ def draw_graph(metrics):
         plt.legend()
         plt.xlabel(metric_name)
         plt.ylabel("CDF")
-        if metric_name == 'NewAdditions':
-            plt.xlim(0, 500)
-        elif metric_name == 'DiffSizes':
-            plt.xlim(0, 1000)
-        elif metric_name == 'EditDistances':
-            plt.xlim(0, 20000)
-        elif metric_name == 'CriticalEditDistances':
-            plt.xlim(0, 20000)
+        
+        
+        SCALE = 'log'
+
+        if SCALE == 'linear':
+            if metric_name == 'NewAdditions':
+                plt.xlim(0, 500)
+            elif metric_name == 'DiffSizes':
+                plt.xlim(0, 1000)
+            elif metric_name == 'EditDistances':
+                plt.xlim(0, 20000)
+            elif metric_name == 'CriticalEditDistances':
+                plt.xlim(0, 20000)
         # plt.xlim(0, 1)
         plt.title(f"CDF of {metric_name}")
-        plt.show()
-        # if METRIC_VALUE == 'first':
-        #     plt.savefig(f'figs/rq3/first/f_{metric_name}.pdf')
-        # elif METRIC_VALUE == 'mean':
-        #     plt.savefig(f'figs/rq3/mean/m_{metric_name}.pdf')
-        # elif METRIC_VALUE == 'last':
-        #     plt.savefig(f'figs/rq3/last/l_{metric_name}.pdf')
+        # plt.show()
+
+        plt.xscale(SCALE)
+        plt.savefig(f'figs/rq3/{SCALE}/{metric_name}.pdf')
+
 
 
 if __name__ == "__main__":
