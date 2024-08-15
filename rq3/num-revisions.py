@@ -73,11 +73,11 @@ def process():
                         metrics['numRevisions']['not_satd'].append(numRevisions)
 
                     # print all the relevant info to make sure this is working properly
-                    print(f'File: {file}')
-                    print(f'Metric: {metric}')
-                    print(f'Age List: {age_list}')
-                    print(f'SATD: {satd}')
-                    print(f'Num Revisions: {numRevisions}\n')
+                    # print(f'File: {file}')
+                    # print(f'Metric: {metric}')
+                    # print(f'Age List: {age_list}')
+                    # print(f'SATD: {satd}')
+                    # print(f'Num Revisions: {numRevisions}\n')
                         
     return metrics
 
@@ -98,10 +98,16 @@ def draw_graph(metrics):
     ln = plt.plot(x,y)
     plt.setp(ln, ls="-", linewidth=3, color='b', label='Non-SATD Methods')
     
+    plt.title('Number of Revisions For SATD and Non-SATD Methods')
     plt.legend()
     plt.xlabel("Number of Revisions")
     plt.ylabel("CDF")
-    plt.show()
+
+    SCALE = 'log'
+    plt.xscale(SCALE)
+    plt.savefig(f'figs/rq3/{SCALE}/NumRevisions.pdf')
+    
+    # plt.show()
 
 if __name__ == "__main__":
     metrics  = process()
