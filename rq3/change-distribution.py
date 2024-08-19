@@ -2,9 +2,6 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 
-# global variable for whehter to take the metric as the first value, last value or average
-
-# SRCDIR = "../../software-evolution/tech-debt-results/"
 SRCDIR = '/home/hisham-kidwai/Documents/HISHAM/Research/Tech-Debt/csv-files-satd/'
 
 def build_indices(line):
@@ -27,58 +24,44 @@ def find_index_to_stop(age_list: list):
             return i
     return -1
 
-def process(metrics_list):
-    """
-    Have the different metrics in a dictionary
-    Each key will be a metric and the value will be a dictionary with 'satd' and 'not_satd' lists
-    IMPORTANT, ALL 3 METRICS (NewAdditions, DiffSizes, EditDistances) ARE 0 IN THE FIRST COMMIT
-    """
+def get_top_5_largest_files(srcdir):
+    files_with_size = [(file, os.path.getsize(os.path.join(srcdir, file))) 
+                       for file in os.listdir(srcdir) if file.endswith('.csv')]
+    sorted_files = sorted(files_with_size, key=lambda x: x[1], reverse=True)
+    return [file[0] for file in sorted_files[:5]]
+
+def process(metrics_list, file):
     metrics = {metric: {'satd': [], 'not_satd': []} for metric in metrics_list}
-    # metrics = {}
-    # for i, metric in enumerate(metrics_list):
-    #     metrics[i] = {metric: {'satd': [], 'not_satd': []}}
-    #     print(metrics)
-    # metrics[len(metrics_list)] = {'numRevisions': {'satd': [], 'not_satd': []}}
-    # print(metrics)
     
-    for file in os.listdir(SRCDIR):
-        if file.endswith('.csv'):
-            fr = open(SRCDIR + file, "r")
-            line = fr.readline()  # skip header
-            indices = build_indices(line)
-            lines = fr.readlines()
+    fr = open(os.path.join(SRCDIR, file), "r")
+    line = fr.readline()  # skip header
+    indices = build_indices(line)
+    lines = fr.readlines()
 
-            # counter = 0
-            
-            for line in lines:
-                # counter += 1
-                # if counter > 100:
-                #     break
+    for line in lines:
+        row = line.strip().split("\t")
+        
+        if int(row[indices['Age']]) > 730:  # Make sure the method is at least 2 years old
+            for metric_name in metrics_list:
+                metric = row[indices[metric_name]].split("#")
+                age_list = row[indices['ChangeAtMethodAge']].split('#')
+                satd = row[indices["SATD"]].split("#")
 
-                row = line.strip().split("\t")
+                index_to_stop = find_index_to_stop(age_list)
+                if index_to_stop != -1:
+                    metric = metric[:index_to_stop]
+                    satd = satd[:index_to_stop]
+
+                # get the sum of the metric
+                total_sum = sum(int(m) for m in metric)
                 
-                if int(row[indices['Age']]) > 730: # Make sure the method is at least 2 years old
-                    for metric_name in metrics_list:
-                        metric = row[indices[metric_name]].split("#")
-                        age_list = row[indices['ChangeAtMethodAge']].split('#')
-                        satd = row[indices["SATD"]].split("#")
+                if total_sum < 0:
+                    continue  # something is wrong
 
-                        index_to_stop = find_index_to_stop(age_list)
-                        if index_to_stop != -1:
-                                metric = metric[:index_to_stop]
-                                satd = satd[:index_to_stop]
-
-                        # get the sum of the metric
-                        sum = 0
-                        for m in metric:
-                            sum += int(m)
-                        
-                        if sum < 0:
-                            continue  # something is wrong
-                        if check_satd(satd):
-                            metrics[metric_name]['satd'].append(sum)
-                        else:
-                            metrics[metric_name]['not_satd'].append(sum)
+                if check_satd(satd):
+                    metrics[metric_name]['satd'].append(total_sum)
+                else:
+                    metrics[metric_name]['not_satd'].append(total_sum)
     return metrics
 
 def ecdf(a):
@@ -86,7 +69,7 @@ def ecdf(a):
     cusum = np.cumsum(counts)
     return x, cusum / cusum[-1]
 
-def draw_graph(metrics):
+def draw_graph(metrics, file_name):
     for metric_name, data in metrics.items():
         plt.figure()
         
@@ -102,9 +85,7 @@ def draw_graph(metrics):
         plt.xlabel(metric_name)
         plt.ylabel("CDF")
         
-        
-        SCALE = 'log'
-
+        SCALE = 'linear'
         if SCALE == 'linear':
             if metric_name == 'NewAdditions':
                 plt.xlim(0, 500)
@@ -114,18 +95,19 @@ def draw_graph(metrics):
                 plt.xlim(0, 20000)
             elif metric_name == 'CriticalEditDistances':
                 plt.xlim(0, 20000)
-        # plt.xlim(0, 1)
+        
         plt.title(f"CDF of {metric_name}")
-        # plt.show()
-
+        
         plt.xscale(SCALE)
-        plt.savefig(f'figs/rq3/{SCALE}/{metric_name}.pdf')
-
-
+        output_dir = f'figs/rq3/{file_name}/{SCALE}'
+        os.makedirs(output_dir, exist_ok=True)
+        plt.savefig(f'{output_dir}/{metric_name}.pdf')
 
 if __name__ == "__main__":
     metrics_list = ['NewAdditions', 'DiffSizes', 'EditDistances', 'CriticalEditDistances']
-    # metrics_list = ['NewAdditions']
-    metrics = process(metrics_list)
-    draw_graph(metrics)
-
+    
+    top_files = get_top_5_largest_files(SRCDIR)
+    
+    for file_name in top_files:
+        metrics = process(metrics_list, file_name)
+        draw_graph(metrics, file_name)
