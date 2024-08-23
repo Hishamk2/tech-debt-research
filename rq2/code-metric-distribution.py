@@ -1,12 +1,16 @@
 import os
 import numpy as np
 import matplotlib.pyplot as plt
+from cliffs_delta import cliffs_delta  
+# from scipy.stats import wilcoxon
+
 
 # SCALE = 'log'
 # METRIC_VALUE = 'mean' # first, mean, last
 
 # SRCDIR = "../../software-evolution/tech-debt-results/"
-SRCDIR = '/home/hisham-kidwai/Documents/HISHAM/Research/Tech-Debt/csv-files-satd/'
+# SRCDIR = '/home/hisham-kidwai/Documents/HISHAM/Research/Tech-Debt/csv-files-satd/'
+SRCDIR = r'D:\\OneDrive - University of Manitoba\\Documents\\HISHAM\\Research\\Tech-Debt\\csv-files-satd\\'
 # SRCDIR = '/home/hisham-kidwai/Documents/HISHAM/Research/Tech-Debt/tech-debt-research/csv-results/full/'
 
 def build_indices(line):
@@ -38,7 +42,7 @@ def process(metrics_list, METRIC_VALUE):
     
     for file in os.listdir(SRCDIR):
         if file.endswith('.csv'):
-            fr = open(SRCDIR + file, "r")
+            fr = open(SRCDIR + file, "r", encoding='utf-8')
             line = fr.readline()  # skip header
             indices = build_indices(line)
             lines = fr.readlines()
@@ -83,7 +87,7 @@ def process(metrics_list, METRIC_VALUE):
                             print('ENTER A VALID METRIC VALUE')
                         
                         if metric < 0:
-                            print('NEGATIVE METRIC VALUE')
+                            # print('NEGATIVE METRIC VALUE')
                             continue  # something is wrong
                         if check_satd(satd):
                             metrics[metric_name]['satd'].append(metric)
@@ -151,14 +155,32 @@ def draw_graph(metrics, METRIC_VALUE, SCALE):
             else:
                 plt.savefig(f'figs/rq2/last/linear/l_{metric_name}.pdf')
 
+def calculate_cliffs_delta(metrics_list):
+    metrics = process(metrics_list, METRIC_VALUE='first') 
+
+    for metric_name, data in metrics.items():
+        satd_values = np.array(data['satd'])
+        not_satd_values = np.array(data['not_satd'])
+        
+        delta, magnitude = cliffs_delta(satd_values, not_satd_values)
+        
+        print(f"Cliff's Delta for {metric_name}: Delta = {delta}, Magnitude = {magnitude}")
+
+
+
 if __name__ == "__main__":
     metrics_list = ['SLOCStandard', 'Readability', 'SimpleReadability', 'MaintainabilityIndex', 'McCabe', 'totalFanOut', 'uniqueFanOut']
     # metrics_list = ['SLOCStandard']
     # metrics = process(metrics_list)
     # draw_graph(metrics)
     # Loop over METRIC_VALUE and SCALE
-    for METRIC_VALUE in ['first', 'mean', 'last']:
-        for SCALE in ['log', 'linear']:
-            metrics = process(metrics_list, METRIC_VALUE)
-            draw_graph(metrics, METRIC_VALUE, SCALE)
+        # Calculate and display Cliff's Delta for each metric
+    calculate_cliffs_delta(metrics_list)
+
+    # Calculate and display Wilcoxon signed-rank test for each metric
+    # calculate_wilcoxon(metrics_list)
+    # for METRIC_VALUE in ['first', 'mean', 'last']:
+    #     for SCALE in ['log', 'linear']:
+    #         metrics = process(metrics_list, METRIC_VALUE)
+    #         draw_graph(metrics, METRIC_VALUE, SCALE)
 
