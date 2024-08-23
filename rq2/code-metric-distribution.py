@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from cliffs_delta import cliffs_delta  
 # from scipy.stats import wilcoxon
+from scipy.stats import mannwhitneyu
 
 
 # SCALE = 'log'
@@ -166,6 +167,17 @@ def calculate_cliffs_delta(metrics_list):
         
         print(f"Cliff's Delta for {metric_name}: Delta = {delta}, Magnitude = {magnitude}")
 
+def calculate_mannwhitneyu(metrics_list):
+    metrics = process(metrics_list, METRIC_VALUE='first')
+
+    for metric_name, data in metrics.items():
+        satd_values = np.array(data['satd'])
+        not_satd_values = np.array(data['not_satd'])
+
+        stat, p_value = mannwhitneyu(satd_values, not_satd_values, alternative='two-sided')
+
+        print(f"Mann-Whitney U test for {metric_name}: Statistic = {stat}, p-value = {p_value}")
+
 
 
 if __name__ == "__main__":
@@ -177,8 +189,8 @@ if __name__ == "__main__":
         # Calculate and display Cliff's Delta for each metric
     calculate_cliffs_delta(metrics_list)
 
-    # Calculate and display Wilcoxon signed-rank test for each metric
-    # calculate_wilcoxon(metrics_list)
+    calculate_mannwhitneyu(metrics_list)
+
     # for METRIC_VALUE in ['first', 'mean', 'last']:
     #     for SCALE in ['log', 'linear']:
     #         metrics = process(metrics_list, METRIC_VALUE)
