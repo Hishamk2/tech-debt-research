@@ -157,18 +157,24 @@ def draw_graph(metrics, METRIC_VALUE, SCALE):
                 plt.savefig(f'figs/rq2/last/linear/l_{metric_name}.pdf')
 
 def calculate_cliffs_delta(metrics_list):
-    metrics = process(metrics_list, METRIC_VALUE='first') 
+    metrics = process(metrics_list, METRIC_VALUE='first')
+
+    print(f"{'Metric':<25}{'Delta':>10}{'Magnitude':>15}")
+    print("=" * 50)
 
     for metric_name, data in metrics.items():
         satd_values = np.array(data['satd'])
         not_satd_values = np.array(data['not_satd'])
-        
+
         delta, magnitude = cliffs_delta(satd_values, not_satd_values)
-        
-        print(f"Cliff's Delta for {metric_name}: Delta = {delta}, Magnitude = {magnitude}")
+
+        print(f"{metric_name:<25}{delta:>10.2f}{magnitude:>15}")
 
 def calculate_mannwhitneyu(metrics_list):
     metrics = process(metrics_list, METRIC_VALUE='first')
+
+    print(f"{'Metric':<25}{'Statistic':>15}{'p-value':>20}")
+    print("=" * 60)
 
     for metric_name, data in metrics.items():
         satd_values = np.array(data['satd'])
@@ -176,7 +182,9 @@ def calculate_mannwhitneyu(metrics_list):
 
         stat, p_value = mannwhitneyu(satd_values, not_satd_values, alternative='two-sided')
 
-        print(f"Mann-Whitney U test for {metric_name}: Statistic = {stat}, p-value = {p_value}")
+        print(f"{metric_name:<25}{stat:>15.2f}{p_value:>20.2f}")
+
+
 
 
 
@@ -188,7 +196,7 @@ if __name__ == "__main__":
     # Loop over METRIC_VALUE and SCALE
         # Calculate and display Cliff's Delta for each metric
     calculate_cliffs_delta(metrics_list)
-
+    print()
     calculate_mannwhitneyu(metrics_list)
 
     # for METRIC_VALUE in ['first', 'mean', 'last']:
