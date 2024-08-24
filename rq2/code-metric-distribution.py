@@ -1,5 +1,6 @@
 import os
 import numpy as np
+from cliffs_delta import cliffs_delta  # Assuming this is already installed and working
 from scipy.stats import mannwhitneyu
 
 SRCDIR = r'D:\\OneDrive - University of Manitoba\\Documents\\HISHAM\\Research\\Tech-Debt\\csv-files-satd\\'
@@ -65,33 +66,48 @@ def process_project(file, metrics_list, METRIC_VALUE):
     
     return metrics
 
-def analyze_projects(metrics_list, METRIC_VALUE='mean'):
-    project_results = {metric: {'significant': 0, 'total': 0, 'non_significant_files': []} for metric in metrics_list}
+def categorize_cliffs_delta(delta):
+    """ Categorize Cliff's Delta effect size """
+    if abs(delta) < 0.147:
+        return 'N'  # Negligible
+    elif abs(delta) < 0.33:
+        return 'S'  # Small
+    elif abs(delta) < 0.474:
+        return 'M'  # Medium
+    else:
+        return 'L'  # Large
+
+def analyze_projects(metrics_list, METRIC_VALUE='first'):
+    # Initialize the summary table
+    summary = {metric: {'N': 0, 'S': 0, 'M': 0, 'L': 0, 'total': 0} for metric in metrics_list}
 
     for file in os.listdir(SRCDIR):
         if file.endswith('.csv'):
             metrics = process_project(file, metrics_list, METRIC_VALUE)
-
+            # print(metrics)
             for metric_name, data in metrics.items():
                 if len(data['satd']) > 0 and len(data['not_satd']) > 0:
-                    stat, p_value = mannwhitneyu(data['satd'], data['not_satd'], alternative='two-sided')
-                    project_results[metric_name]['total'] += 1
-                    if p_value < 0.05:  # commonly used threshold for statistical significance
-                        project_results[metric_name]['significant'] += 1
-                    else:
-                        project_results[metric_name]['non_significant_files'].append((file, p_value))
+                    delta, magnitude = cliffs_delta(data['satd'], data['not_satd'])
+                    # print(f"File: {file}, Metric: {metric_name}, Delta: {delta}, Magnitude: {magnitude}")
+                    category = categorize_cliffs_delta(delta)
+                    # print(f"File: {file}, Metric: {metric_name}, Category: {category}")
+                    summary[metric_name][category] += 1
+                    summary[metric_name]['total'] += 1
+                    # print(f"Updated summary for {metric_name}: {summary[metric_name]}")
 
-    # Calculate the percentage of projects with statistically significant differences
-    for metric_name, results in project_results.items():
-        print()
-        if results['total'] > 0:
-            percentage_significant = (results['significant'] / results['total']) * 100
-            print(f"{metric_name:<25}{percentage_significant:>10.2f}% of projects show statistically significant difference")
-            if results['non_significant_files']:
-                print(f"Projects with no significant difference for {metric_name}:")
-                for non_sig_file, p_value in results['non_significant_files']:
-                    print(f"  - {non_sig_file} (p-value: {p_value:.4f})")
+
+            # print(summary)
+    # Print the summary table
+    print(f"{'Metric':<20} {'N (%)':<10} {'S (%)':<10} {'M (%)':<10} {'L (%)':<10}")
+    print("=" * 60)
+    for metric_name, counts in summary.items():
+        if counts['total'] > 0:
+            n_percent = (counts['N'] / counts['total']) * 100
+            s_percent = (counts['S'] / counts['total']) * 100
+            m_percent = (counts['M'] / counts['total']) * 100
+            l_percent = (counts['L'] / counts['total']) * 100
+            print(f"{metric_name:<20} {n_percent:<10.0f} {s_percent:<10.0f} {m_percent:<10.0f} {l_percent:<10.0f}")
 
 if __name__ == "__main__":
-    metrics_list = ['SLOCStandard', 'Readability', 'SimpleReadability', 'MaintainabilityIndex', 'McCabe', 'totalFanOut', 'uniqueFanOut']
+    metrics_list = ['SLOCStandard', 'Readability', 'SimpleReadability', 'MaintainabilityIndex', 'totalFanOut']
     analyze_projects(metrics_list, METRIC_VALUE='first')
