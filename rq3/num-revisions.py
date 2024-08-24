@@ -1,8 +1,7 @@
 import os
 import numpy as np
-import matplotlib.pyplot as plt
-from cliffs_delta import cliffs_delta
 from scipy.stats import mannwhitneyu
+from cliffs_delta import cliffs_delta
 
 # SRCDIR = '/home/hisham-kidwai/Documents/HISHAM/Research/Tech-Debt/csv-files-satd/'
 SRCDIR = r'D:\\OneDrive - University of Manitoba\\Documents\\HISHAM\\Research\\Tech-Debt\\csv-files-satd\\'
@@ -27,7 +26,7 @@ def find_index_to_stop(age_list: list):
             return i
     return -1
 
-def process(file):
+def process_project(file):
     metrics = {'numRevisions': {'satd': [], 'not_satd': []}}
     
     with open(os.path.join(SRCDIR, file), "r", encoding='utf-8') as fr:
@@ -57,63 +56,27 @@ def process(file):
                         
     return metrics
 
-def aggregate_metrics():
-    aggregated_metrics = {'numRevisions': {'satd': [], 'not_satd': []}}
-    
+def analyze_projects():
+    project_results = {'numRevisions': {'significant': 0, 'total': 0}}
+
     for file in os.listdir(SRCDIR):
         if file.endswith('.csv'):
-            file_metrics = process(file)
-            for metric_name, data in file_metrics.items():
-                aggregated_metrics[metric_name]['satd'].extend(data['satd'])
-                aggregated_metrics[metric_name]['not_satd'].extend(data['not_satd'])
-                
-    return aggregated_metrics
+            metrics = process_project(file)
 
-def draw_graph(metrics):
-    satd = metrics['numRevisions']['satd']
-    not_satd = metrics['numRevisions']['not_satd']
-    
-    x, y = ecdf(satd)
-    ln = plt.plot(x, y)
-    plt.setp(ln, ls="-", linewidth=3, color='r', label='SATD Methods')
-    
-    x, y = ecdf(not_satd)
-    ln = plt.plot(x, y)
-    plt.setp(ln, ls="-", linewidth=3, color='b', label='Non-SATD Methods')
-    
-    plt.title('Number of Revisions For SATD and Non-SATD Methods (Aggregated)')
-    plt.legend()
-    plt.xlabel("Number of Revisions")
-    plt.ylabel("CDF")
+            data = metrics['numRevisions']
+            if len(data['satd']) > 0 and len(data['not_satd']) > 0:
+                # Perform the Mann-Whitney U test (Wilcoxon rank-sum test)
+                stat, p_value = mannwhitneyu(data['satd'], data['not_satd'], alternative='two-sided')
+                project_results['numRevisions']['total'] += 1
+                if p_value < 0.05:  # Commonly used threshold for statistical significance
+                    project_results['numRevisions']['significant'] += 1
 
-    SCALE = 'linear'
-    plt.xscale(SCALE)
-    
-    output_dir = f'figs/rq3/aggregated/{SCALE}'
-    os.makedirs(output_dir, exist_ok=True)
-    plt.savefig(f'{output_dir}/NumRevisions.pdf')
-
-    # plt.show()
-
-def print_statistical_tests(aggregated_metrics):
-    print("Aggregated Statistical Analysis for Number of Revisions")
-    print(f"{'Metric':<25} {'Cliff\'s Delta':>15} {'Magnitude':>12} {'Mann-Whitney U':>20} {'p-value':>10}")
-    print("=" * 80)
-    
-    for metric_name, data in aggregated_metrics.items():
-        if len(data['satd']) > 0 and len(data['not_satd']) > 0:
-            delta, magnitude = cliffs_delta(data['satd'], data['not_satd'])
-            stat, p_value = mannwhitneyu(data['satd'], data['not_satd'], alternative='two-sided')
-            
-            print(f"{metric_name:<25} {delta:>15.4f} {magnitude:>12} {stat:>20.2f} {p_value:>10.4f}")
-    print()
+    # Calculate the percentage of projects with statistically significant differences
+    results = project_results['numRevisions']
+    if results['total'] > 0:
+        percentage_significant = (results['significant'] / results['total']) * 100
+        print(f"Number of Revisions: {percentage_significant:.2f}% of projects show statistically significant difference")
 
 if __name__ == "__main__":
-    # Aggregate metrics across all files
-    aggregated_metrics = aggregate_metrics()
-    
-    # Perform and print aggregated statistical tests
-    print_statistical_tests(aggregated_metrics)
-    
-    # Draw graph for the aggregated data
-    # draw_graph(aggregated_metrics)
+    # Analyze projects for statistically significant differences
+    analyze_projects()
