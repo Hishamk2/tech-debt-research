@@ -79,18 +79,19 @@ def analyze_projects(metrics_list, METRIC_VALUE='mean'):
                     if p_value < 0.05:  # commonly used threshold for statistical significance
                         project_results[metric_name]['significant'] += 1
                     else:
-                        project_results[metric_name]['non_significant_files'].append(file)
+                        project_results[metric_name]['non_significant_files'].append((file, p_value))
 
     # Calculate the percentage of projects with statistically significant differences
     for metric_name, results in project_results.items():
+        print()
         if results['total'] > 0:
             percentage_significant = (results['significant'] / results['total']) * 100
             print(f"{metric_name:<25}{percentage_significant:>10.2f}% of projects show statistically significant difference")
             if results['non_significant_files']:
                 print(f"Projects with no significant difference for {metric_name}:")
-                for non_sig_file in results['non_significant_files']:
-                    print(f"  - {non_sig_file}")
+                for non_sig_file, p_value in results['non_significant_files']:
+                    print(f"  - {non_sig_file} (p-value: {p_value:.4f})")
 
 if __name__ == "__main__":
     metrics_list = ['SLOCStandard', 'Readability', 'SimpleReadability', 'MaintainabilityIndex', 'McCabe', 'totalFanOut', 'uniqueFanOut']
-    analyze_projects(metrics_list, METRIC_VALUE='mean')
+    analyze_projects(metrics_list, METRIC_VALUE='first')
