@@ -1,8 +1,10 @@
 import os
 import numpy as np
 import matplotlib.pyplot as plt
+from cliffs_delta import cliffs_delta
+from scipy.stats import mannwhitneyu
 
-SRCDIR = '/home/hisham-kidwai/Documents/HISHAM/Research/Tech-Debt/csv-files-satd/'
+SRCDIR = r'D:\\OneDrive - University of Manitoba\\Documents\\HISHAM\\Research\\Tech-Debt\\csv-files-satd\\'
 
 def build_indices(line):
     indexes = {}
@@ -24,16 +26,10 @@ def find_index_to_stop(age_list: list):
             return i
     return -1
 
-def get_top_5_largest_files(srcdir):
-    files_with_size = [(file, os.path.getsize(os.path.join(srcdir, file))) 
-                       for file in os.listdir(srcdir) if file.endswith('.csv')]
-    sorted_files = sorted(files_with_size, key=lambda x: x[1], reverse=True)
-    return [file[0] for file in sorted_files[:5]]
-
 def process(metrics_list, file):
     metrics = {metric: {'satd': [], 'not_satd': []} for metric in metrics_list}
     
-    fr = open(os.path.join(SRCDIR, file), "r")
+    fr = open(os.path.join(SRCDIR, file), "r", encoding='utf-8')
     line = fr.readline()  # skip header
     indices = build_indices(line)
     lines = fr.readlines()
@@ -64,50 +60,36 @@ def process(metrics_list, file):
                     metrics[metric_name]['not_satd'].append(total_sum)
     return metrics
 
-def ecdf(a):
-    x, counts = np.unique(a, return_counts=True)
-    cusum = np.cumsum(counts)
-    return x, cusum / cusum[-1]
+def aggregate_metrics(metrics_list):
+    aggregated_metrics = {metric: {'satd': [], 'not_satd': []} for metric in metrics_list}
+    
+    for file in os.listdir(SRCDIR):
+        if file.endswith('.csv'):
+            file_metrics = process(metrics_list, file)
+            for metric_name, data in file_metrics.items():
+                aggregated_metrics[metric_name]['satd'].extend(data['satd'])
+                aggregated_metrics[metric_name]['not_satd'].extend(data['not_satd'])
+                
+    return aggregated_metrics
 
-def draw_graph(metrics, file_name):
-    for metric_name, data in metrics.items():
-        plt.figure()
-        
-        x, y = ecdf(data['satd'])
-        ln = plt.plot(x, y)
-        plt.setp(ln, ls="-", linewidth=3, color='r', label='SATD')
-        
-        x, y = ecdf(data['not_satd'])
-        ln = plt.plot(x, y)
-        plt.setp(ln, ls="--", linewidth=3, color='blue', label='NOT_SATD')
-        
-        plt.legend()
-        plt.xlabel(metric_name)
-        plt.ylabel("CDF")
-        
-        SCALE = 'linear'
-        if SCALE == 'linear':
-            if metric_name == 'NewAdditions':
-                plt.xlim(0, 500)
-            elif metric_name == 'DiffSizes':
-                plt.xlim(0, 1000)
-            elif metric_name == 'EditDistances':
-                plt.xlim(0, 20000)
-            elif metric_name == 'CriticalEditDistances':
-                plt.xlim(0, 20000)
-        
-        plt.title(f"CDF of {metric_name}")
-        
-        plt.xscale(SCALE)
-        output_dir = f'figs/rq3/{file_name}/{SCALE}'
-        os.makedirs(output_dir, exist_ok=True)
-        plt.savefig(f'{output_dir}/{metric_name}.pdf')
+def print_statistical_tests(aggregated_metrics):
+    print("Aggregated Statistical Analysis")
+    print(f"{'Metric':<25} {'Cliff\'s Delta':>15} {'Magnitude':>12} {'Mann-Whitney U':>20} {'p-value':>10}")
+    print("=" * 80)
+    
+    for metric_name, data in aggregated_metrics.items():
+        if len(data['satd']) > 0 and len(data['not_satd']) > 0:
+            delta, magnitude = cliffs_delta(data['satd'], data['not_satd'])
+            stat, p_value = mannwhitneyu(data['satd'], data['not_satd'], alternative='two-sided')
+            
+            print(f"{metric_name:<25} {delta:>15.4f} {magnitude:>12} {stat:>20.2f} {p_value:>10.4f}")
+    print()
 
 if __name__ == "__main__":
     metrics_list = ['NewAdditions', 'DiffSizes', 'EditDistances', 'CriticalEditDistances']
     
-    top_files = get_top_5_largest_files(SRCDIR)
+    # Aggregate metrics across all files
+    aggregated_metrics = aggregate_metrics(metrics_list)
     
-    for file_name in top_files:
-        metrics = process(metrics_list, file_name)
-        draw_graph(metrics, file_name)
+    # Perform and print aggregated statistical tests
+    print_statistical_tests(aggregated_metrics)
