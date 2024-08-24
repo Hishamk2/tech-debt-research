@@ -65,8 +65,8 @@ def process_project(file, metrics_list, METRIC_VALUE):
     
     return metrics
 
-def analyze_projects(metrics_list, METRIC_VALUE='first'):
-    project_results = {metric: {'significant': 0, 'total': 0} for metric in metrics_list}
+def analyze_projects(metrics_list, METRIC_VALUE='mean'):
+    project_results = {metric: {'significant': 0, 'total': 0, 'non_significant_files': []} for metric in metrics_list}
 
     for file in os.listdir(SRCDIR):
         if file.endswith('.csv'):
@@ -78,13 +78,19 @@ def analyze_projects(metrics_list, METRIC_VALUE='first'):
                     project_results[metric_name]['total'] += 1
                     if p_value < 0.05:  # commonly used threshold for statistical significance
                         project_results[metric_name]['significant'] += 1
+                    else:
+                        project_results[metric_name]['non_significant_files'].append(file)
 
     # Calculate the percentage of projects with statistically significant differences
     for metric_name, results in project_results.items():
         if results['total'] > 0:
             percentage_significant = (results['significant'] / results['total']) * 100
             print(f"{metric_name:<25}{percentage_significant:>10.2f}% of projects show statistically significant difference")
+            if results['non_significant_files']:
+                print(f"Projects with no significant difference for {metric_name}:")
+                for non_sig_file in results['non_significant_files']:
+                    print(f"  - {non_sig_file}")
 
 if __name__ == "__main__":
     metrics_list = ['SLOCStandard', 'Readability', 'SimpleReadability', 'MaintainabilityIndex', 'McCabe', 'totalFanOut', 'uniqueFanOut']
-    analyze_projects(metrics_list, METRIC_VALUE='first')
+    analyze_projects(metrics_list, METRIC_VALUE='mean')
