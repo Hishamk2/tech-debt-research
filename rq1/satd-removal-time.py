@@ -16,9 +16,8 @@ def build_indices(line):
 def process():
     removal_times = []
 
-    # Counters for methods with SATD removed only once or more than once
-    single_removal_count = 0
-    multiple_removal_count = 0
+    # Dictionaries to store counts for each project
+    project_stats = {}
 
     for file in os.listdir(SRCDIR):
         if file.endswith('.csv'):
@@ -26,6 +25,10 @@ def process():
             header = fr.readline() # skip header
             indices = build_indices(header)
             lines = fr.readlines()
+
+            project_name = os.path.splitext(file)[0]
+            if project_name not in project_stats:
+                project_stats[project_name] = {'more_than_1000': 0, 'less_or_equal_1000': 0}
             
             for line in lines:
                 row = line.strip().split("\t")             
@@ -51,30 +54,34 @@ def process():
 
                         start_index = None  # Reset start index for next SATD segment   
                 
-                # Check if any removal time exceeds 1000 days and print details
+                # Determine if any of the removal times exceed 1000 days
                 if any(time > 1000 for time in method_removal_times):
-                    print(f"\nFile: {file}")
-                    print('SATD:', satd_list)
-                    print('Ages:', age_list)
-                    print(f"Method File Value: {row[indices['file']]}")
-                    print(f"SATD Removal Times: {method_removal_times}")
+                    project_stats[project_name]['more_than_1000'] += 1
+                else:
+                    project_stats[project_name]['less_or_equal_1000'] += 1
 
-                    # Check if SATD was removed only once or more than once
-                    if len(method_removal_times) == 1:
-                        single_removal_count += 1
-                    else:
-                        multiple_removal_count += 1
+                # Print details if any removal time exceeds 1000 days
+                # if any(time > 1000 for time in method_removal_times):
+                    # print(f"\nFile: {file}")
+                    # print('SATD:', satd_list)
+                    # print('Ages:', age_list)
+                    # print(f"Method File Value: {row[indices['file']]}")
+                    # print(f"SATD Removal Times: {method_removal_times}")
 
-    # Calculate percentages
-    total_methods = single_removal_count + multiple_removal_count
-    if total_methods > 0:
-        single_removal_percentage = (single_removal_count / total_methods) * 100
-        multiple_removal_percentage = (multiple_removal_count / total_methods) * 100
+    # Calculate and print percentages for each project
+    for project_name, stats in project_stats.items():
+        total_methods = stats['more_than_1000'] + stats['less_or_equal_1000']
+        if total_methods > 0:
+            more_than_1000_percentage = (stats['more_than_1000'] / total_methods) * 100
+            less_or_equal_1000_percentage = (stats['less_or_equal_1000'] / total_methods) * 100
 
-        print(f"\nPercentage of methods with SATD > 1000 days removed only once: {single_removal_percentage:.2f}%")
-        print(f"Percentage of methods with SATD > 1000 days removed more than once: {multiple_removal_percentage:.2f}%")
-    else:
-        print("\nNo methods with SATD removal times greater than 1000 days were found.")
+            if more_than_1000_percentage > 1:
+                print(f"\nProject: {project_name}")
+                print(f"Percentage of methods with SATD > 1000 days: {more_than_1000_percentage:.2f}%")
+                print(f"Percentage of methods with SATD <= 1000 days: {less_or_equal_1000_percentage:.2f}%")
+        else:
+            print(f"\nProject: {project_name}")
+            print("No methods found.")
 
     return removal_times         
 
