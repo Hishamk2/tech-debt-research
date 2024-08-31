@@ -16,16 +16,24 @@ def build_indices(line):
 def process():
     removal_times = []
 
-    # Counters for methods with SATD removed a specific number of times
-    single_removal_count = 0
-    two_removal_count = 0
-    three_removal_count = 0
-    four_removal_count = 0
-    five_removal_count = 0
-    six_removal_count = 0
-    seven_removal_count = 0
-    greater_than_seven_count = 0
+    # Counters for SATD removal times > 1000 days
+    single_removal_count_greater_1000 = 0
+    two_removal_count_greater_1000 = 0
+    three_removal_count_greater_1000 = 0
+    four_removal_count_greater_1000 = 0
+    five_removal_count_greater_1000 = 0
+    more_than_five_removal_count_greater_1000 = 0
 
+    # Counters for SATD removal times <= 1000 days
+    single_removal_count_less_1000 = 0
+    two_removal_count_less_1000 = 0
+    three_removal_count_less_1000 = 0
+    four_removal_count_less_1000 = 0
+    five_removal_count_less_1000 = 0
+    six_removal_count_less_1000 = 0
+    seven_removal_count_less_1000 = 0
+    more_than_seven_removal_count_less_1000 = 0
+    
     for file in os.listdir(SRCDIR):
         if file.endswith('.csv'):
             fr = open(SRCDIR + file, "r", encoding='utf-8')
@@ -57,58 +65,110 @@ def process():
 
                         start_index = None  # Reset start index for next SATD segment   
                 
-                # Check if any removal time exceeds 1000 days and print details
+                # Determine the number of removals and categorize accordingly
+                num_removals = len(method_removal_times)
+
                 if any(time > 1000 for time in method_removal_times):
-                    print(f"\nFile: {file}")
-                    print('SATD:', satd_list)
-                    print('Ages:', age_list)
-                    print(f"Method File Value: {row[indices['file']]}")
-                    print(f"SATD Removal Times: {method_removal_times}")
-
-                    # Track the number of removals
-                    num_removals = len(method_removal_times)
                     if num_removals == 1:
-                        single_removal_count += 1
+                        single_removal_count_greater_1000 += 1
                     elif num_removals == 2:
-                        two_removal_count += 1
+                        two_removal_count_greater_1000 += 1
                     elif num_removals == 3:
-                        three_removal_count += 1
+                        three_removal_count_greater_1000 += 1
                     elif num_removals == 4:
-                        four_removal_count += 1
+                        four_removal_count_greater_1000 += 1
                     elif num_removals == 5:
-                        five_removal_count += 1
+                        five_removal_count_greater_1000 += 1
+                    elif num_removals > 5:
+                        more_than_five_removal_count_greater_1000 += 1
+                else:
+                    if num_removals == 1:
+                        single_removal_count_less_1000 += 1
+                    elif num_removals == 2:
+                        two_removal_count_less_1000 += 1
+                    elif num_removals == 3:
+                        three_removal_count_less_1000 += 1
+                    elif num_removals == 4:
+                        four_removal_count_less_1000 += 1
+                    elif num_removals == 5:
+                        five_removal_count_less_1000 += 1
                     elif num_removals == 6:
-                        six_removal_count += 1
+                        six_removal_count_less_1000 += 1
                     elif num_removals == 7:
-                        seven_removal_count += 1
-                    else:
-                        greater_than_seven_count += 1
+                        seven_removal_count_less_1000 += 1
+                    elif num_removals > 7:
+                        more_than_seven_removal_count_less_1000 += 1
 
-    # Calculate total methods with SATD removal times greater than 1000 days
-    total_methods = (
-        single_removal_count + two_removal_count + three_removal_count + 
-        four_removal_count + five_removal_count + six_removal_count + 
-        seven_removal_count + greater_than_seven_count
+    # Calculate and print percentages for SATD removal > 1000 days
+    total_methods_greater_1000 = (
+        single_removal_count_greater_1000 + two_removal_count_greater_1000 + 
+        three_removal_count_greater_1000 + four_removal_count_greater_1000 + 
+        five_removal_count_greater_1000 + more_than_five_removal_count_greater_1000
     )
-    
-    # Print counts for each removal category
-    print('single_removal_count:', single_removal_count)
-    print('two_removal_count:', two_removal_count)
-    print('three_removal_count:', three_removal_count)
-    print('four_removal_count:', four_removal_count)
-    print('five_removal_count:', five_removal_count)
-    print('six_removal_count:', six_removal_count)
-    print('seven_removal_count:', seven_removal_count)
-    print('greater_than_seven_count:', greater_than_seven_count)
 
-    if total_methods > 0:
-        single_removal_percentage = (single_removal_count / total_methods) * 100
-        multiple_removal_percentage = (greater_than_seven_count / total_methods) * 100
+    if total_methods_greater_1000 > 0:
+        print(f"\nSATD Removal Times > 1000 Days:")
+        print(f"Single removal count: {single_removal_count_greater_1000}")
+        print(f"Two removals count: {two_removal_count_greater_1000}")
+        print(f"Three removals count: {three_removal_count_greater_1000}")
+        print(f"Four removals count: {four_removal_count_greater_1000}")
+        print(f"Five removals count: {five_removal_count_greater_1000}")
+        print(f"More than five removals count: {more_than_five_removal_count_greater_1000}")
 
-        print(f"\nPercentage of methods with SATD > 1000 days removed only once: {single_removal_percentage:.2f}%")
-        print(f"Percentage of methods with SATD > 1000 days removed more than once: {multiple_removal_percentage:.2f}%")
+        single_removal_percentage_greater_1000 = (single_removal_count_greater_1000 / total_methods_greater_1000) * 100
+        two_removal_percentage_greater_1000 = (two_removal_count_greater_1000 / total_methods_greater_1000) * 100
+        three_removal_percentage_greater_1000 = (three_removal_count_greater_1000 / total_methods_greater_1000) * 100
+        four_removal_percentage_greater_1000 = (four_removal_count_greater_1000 / total_methods_greater_1000) * 100
+        five_removal_percentage_greater_1000 = (five_removal_count_greater_1000 / total_methods_greater_1000) * 100
+        more_than_five_removal_percentage_greater_1000 = (more_than_five_removal_count_greater_1000 / total_methods_greater_1000) * 100
+
+        print(f"\nPercentage of methods with SATD > 1000 days removed only once: {single_removal_percentage_greater_1000:.2f}%")
+        print(f"Percentage of methods with SATD > 1000 days removed twice: {two_removal_percentage_greater_1000:.2f}%")
+        print(f"Percentage of methods with SATD > 1000 days removed three times: {three_removal_percentage_greater_1000:.2f}%")
+        print(f"Percentage of methods with SATD > 1000 days removed four times: {four_removal_percentage_greater_1000:.2f}%")
+        print(f"Percentage of methods with SATD > 1000 days removed five times: {five_removal_percentage_greater_1000:.2f}%")
+        print(f"Percentage of methods with SATD > 1000 days removed more than five times: {more_than_five_removal_percentage_greater_1000:.2f}%")
     else:
         print("\nNo methods with SATD removal times greater than 1000 days were found.")
+
+    # Calculate and print percentages for SATD removal <= 1000 days
+    total_methods_less_1000 = (
+        single_removal_count_less_1000 + two_removal_count_less_1000 + 
+        three_removal_count_less_1000 + four_removal_count_less_1000 + 
+        five_removal_count_less_1000 + six_removal_count_less_1000 +
+        seven_removal_count_less_1000 + more_than_seven_removal_count_less_1000
+    )
+
+    if total_methods_less_1000 > 0:
+        print(f"\nSATD Removal Times <= 1000 Days:")
+        print(f"Single removal count: {single_removal_count_less_1000}")
+        print(f"Two removals count: {two_removal_count_less_1000}")
+        print(f"Three removals count: {three_removal_count_less_1000}")
+        print(f"Four removals count: {four_removal_count_less_1000}")
+        print(f"Five removals count: {five_removal_count_less_1000}")
+        print(f"Six removals count: {six_removal_count_less_1000}")
+        print(f"Seven removals count: {seven_removal_count_less_1000}")
+        print(f"More than seven removals count: {more_than_seven_removal_count_less_1000}")
+
+        single_removal_percentage_less_1000 = (single_removal_count_less_1000 / total_methods_less_1000) * 100
+        two_removal_percentage_less_1000 = (two_removal_count_less_1000 / total_methods_less_1000) * 100
+        three_removal_percentage_less_1000 = (three_removal_count_less_1000 / total_methods_less_1000) * 100
+        four_removal_percentage_less_1000 = (four_removal_count_less_1000 / total_methods_less_1000) * 100
+        five_removal_percentage_less_1000 = (five_removal_count_less_1000 / total_methods_less_1000) * 100
+        six_removal_count_less_1000 = (six_removal_count_less_1000 / total_methods_less_1000) * 100
+        seven_removal_count_less_1000 = (seven_removal_count_less_1000 / total_methods_less_1000) * 100
+        more_than_seven_removal_count_less_1000 = (more_than_seven_removal_count_less_1000 / total_methods_less_1000) * 100
+
+        print(f"\nPercentage of methods with SATD <= 1000 days removed only once: {single_removal_percentage_less_1000:.2f}%")
+        print(f"Percentage of methods with SATD <= 1000 days removed twice: {two_removal_percentage_less_1000:.2f}%")
+        print(f"Percentage of methods with SATD <= 1000 days removed three times: {three_removal_percentage_less_1000:.2f}%")
+        print(f"Percentage of methods with SATD <= 1000 days removed four times: {four_removal_percentage_less_1000:.2f}%")
+        print(f"Percentage of methods with SATD <= 1000 days removed five times: {five_removal_percentage_less_1000:.2f}%")
+        print(f"Percentage of methods with SATD <= 1000 days removed six times: {six_removal_count_less_1000:.2f}%")
+        print(f"Percentage of methods with SATD <= 1000 days removed seven times: {seven_removal_count_less_1000:.2f}%")
+        print(f"Percentage of methods with SATD <= 1000 days removed more than seven times: {more_than_seven_removal_count_less_1000:.2f}%")
+    else:
+        print("\nNo methods with SATD removal times less than or equal to 1000 days were found.")
 
     return removal_times         
 
