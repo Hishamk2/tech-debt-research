@@ -110,14 +110,15 @@ def analyze_projects(metrics_list, METRIC_VALUE='first'):
     for file in os.listdir(SRCDIR):
         if file.endswith('.csv'):
             metrics, satd_count, not_satd_count = process_project(file, metrics_list, METRIC_VALUE)
-            print(f"{file}: Methods with SATD = {satd_count}, Methods without SATD = {not_satd_count}")
-            for metric_name, data in metrics.items():
-                if len(data['satd']) > 0 and len(data['not_satd']) > 0:
-                    delta, magnitude = cliffs_delta(data['satd'], data['not_satd'])
-                    expected_delta = EXPECTED_SIGNS[metric_name]
-                    # Check if the sign matches the expected delta
-                    if (delta < 0 and expected_delta > 0) or (delta > 0 and expected_delta < 0):
-                        print(f"  {metric_name} Cliff Delta = {delta:.2f}, expected = {expected_delta:.2f}")
+            if satd_count < 30:
+                print(f"{file}: Methods with SATD = {satd_count}, Ratio of SATD: {(satd_count / (satd_count + not_satd_count)):.2f}, Methods without SATD = {not_satd_count}")
+                for metric_name, data in metrics.items():
+                    if len(data['satd']) > 0 and len(data['not_satd']) > 0:
+                        delta, magnitude = cliffs_delta(data['satd'], data['not_satd'])
+                        expected_delta = EXPECTED_SIGNS[metric_name]
+                        # Check if the sign matches the expected delta
+                        if (delta < 0 and expected_delta > 0) or (delta > 0 and expected_delta < 0):
+                            print(f"  {metric_name} Cliff Delta = {delta:.2f}, expected = {expected_delta:.2f}")
 
 if __name__ == "__main__":
     metrics_list = ['SLOCAsItIs', 'SLOCNoCommentPrettyPrinter', 'SLOCStandard', 'CommentCodeRation', 'Readability', 
