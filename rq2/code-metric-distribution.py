@@ -59,6 +59,8 @@ def find_index_to_stop(age_list: list):
 
 def process_project(file, metrics_list, METRIC_VALUE):
     metrics = {metric: {'satd': [], 'not_satd': []} for metric in metrics_list}
+    satd_count = 0
+    not_satd_count = 0
     
     with open(SRCDIR + file, "r", encoding='utf-8') as fr:
         line = fr.readline()  # skip header
@@ -69,6 +71,12 @@ def process_project(file, metrics_list, METRIC_VALUE):
             row = line.strip().split("\t")
 
             if int(row[indices['Age']]) > 730:  # Ensure the method is at least 2 years old
+                satd = row[indices["SATD"]].split("#")
+                if check_satd(satd):
+                    satd_count += 1
+                else:
+                    not_satd_count += 1
+
                 for metric_name in metrics_list:
                     metric = row[indices[metric_name]].split("#")
                     age_list = row[indices['ChangeAtMethodAge']].split('#')
@@ -96,30 +104,20 @@ def process_project(file, metrics_list, METRIC_VALUE):
                     else:
                         metrics[metric_name]['not_satd'].append(metric)
     
-    return metrics
-
-def categorize_cliffs_delta(delta):
-    """ Categorize Cliff's Delta effect size """
-    if abs(delta) < 0.147:
-        return 'N'  # Negligible
-    elif abs(delta) < 0.33:
-        return 'S'  # Small
-    elif abs(delta) < 0.474:
-        return 'M'  # Medium
-    else:
-        return 'L'  # Large
+    return metrics, satd_count, not_satd_count
 
 def analyze_projects(metrics_list, METRIC_VALUE='first'):
     for file in os.listdir(SRCDIR):
         if file.endswith('.csv'):
-            metrics = process_project(file, metrics_list, METRIC_VALUE)
+            metrics, satd_count, not_satd_count = process_project(file, metrics_list, METRIC_VALUE)
+            print(f"{file}: Methods with SATD = {satd_count}, Methods without SATD = {not_satd_count}")
             for metric_name, data in metrics.items():
                 if len(data['satd']) > 0 and len(data['not_satd']) > 0:
                     delta, magnitude = cliffs_delta(data['satd'], data['not_satd'])
                     expected_delta = EXPECTED_SIGNS[metric_name]
                     # Check if the sign matches the expected delta
                     if (delta < 0 and expected_delta > 0) or (delta > 0 and expected_delta < 0):
-                        print(f"{file} {metric_name} Cliff Delta = {delta:.2f}, expected = {expected_delta:.2f}")
+                        print(f"  {metric_name} Cliff Delta = {delta:.2f}, expected = {expected_delta:.2f}")
 
 if __name__ == "__main__":
     metrics_list = ['SLOCAsItIs', 'SLOCNoCommentPrettyPrinter', 'SLOCStandard', 'CommentCodeRation', 'Readability', 
